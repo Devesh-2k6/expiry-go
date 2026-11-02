@@ -21,3 +21,4 @@ static/uploads/
 backend/static/uploads/
 ~$*
 .idea/
+.vercel
