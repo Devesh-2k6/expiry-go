@@ -41,8 +41,9 @@ echo [4/4] Starting React Native Expo Go Mobile Server (%LAN_IP%:8081)...
 start "Meeva Mobile App" cmd /k "title Meeva Expo Go Server && cd mobile && set REACT_NATIVE_PACKAGER_HOSTNAME=%LAN_IP% && npx expo start --go --host lan -c"
 echo.
 
-:: 7. Open Browser Companion
+:: 7. Open Browser Companion & Web App
 timeout /t 2 /nobreak >nul
+start http://localhost:3000
 start http://localhost:3000/mobile
 
 echo ============================================================
@@ -52,10 +53,12 @@ echo   • Backend API:   http://localhost:8000   (Docs: http://localhost:8000/d
 echo   • Mobile App:    Expo Go (Scan QR in Mobile window or open exp://%LAN_IP%:8081)
 echo   • Web Companion: Opened http://localhost:3000/mobile (QR Scanner & Sync Lab)
 echo.
-echo   📱 INSTRUCTIONS FOR EXPO GO SCANNER:
-echo   1. Open 'Expo Go' app on your phone (connected to same Wi-Fi %LAN_IP%).
-echo   2. Tap 'Scan QR code' and scan the QR code in the Expo window or at http://localhost:3000/mobile.
-echo   3. If router has client isolation, connect phone to Mobile Hotspot and re-run!
+echo   📱 HOW TO USE WEB AND APP SIMULTANEOUSLY:
+echo   1. PHONE (Expo Go): Connect to Wi-Fi (%LAN_IP%) and scan QR at http://localhost:3000/mobile.
+echo   2. PC BROWSER (Side-by-side): In the 'Meeva Mobile App' terminal, press 'w' to launch
+echo      the Mobile App at http://localhost:8081 right next to your Web App!
+echo   3. TEST REAL-TIME SYNC: Go to http://localhost:3000/mobile -> 'Live Sync Lab' tab
+echo      and click 'Run Simultaneous Sync Test' to verify instant real-time data sync!
 echo ============================================================
 echo.
 pause

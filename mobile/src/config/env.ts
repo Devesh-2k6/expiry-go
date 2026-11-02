@@ -4,7 +4,7 @@ import Constants from "expo-constants";
 
 export const API_OVERRIDE_KEY = "EXPIRYGO_MOBILE_API_OVERRIDE";
 
-export const CURRENT_LAN_IP = "192.168.1.6";
+export const CURRENT_LAN_IP = "192.168.1.5";
 export const LAN_API_URL = `http://${CURRENT_LAN_IP}:8000`;
 export const TUNNEL_API_URL = "https://william-keep-transcription-ctrl.trycloudflare.com";
 
@@ -17,6 +17,10 @@ export const TUNNEL_API_URL = "https://william-keep-transcription-ctrl.trycloudf
  * - iOS Simulator / Local: localhost:8000
  */
 export function getDefaultApiBaseUrl(): string {
+  // 0. Build-time environment variable (EAS / Production builds)
+  if (process.env.EXPO_PUBLIC_API_URL && process.env.EXPO_PUBLIC_API_URL.trim()) {
+    return process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/+$/, '');
+  }
   // 1. If running in Web browser (Expo Web / React Native Web)
   if (Platform.OS === "web" && typeof window !== "undefined") {
     const hostname = window.location.hostname;

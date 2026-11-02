@@ -134,12 +134,14 @@ def main():
     print(f"  📱 Expo Go App:       exp://{lan_ip}:8081")
     print(f"  📲 Web Companion:     http://localhost:3000/mobile (Interactive QR Scanner)")
     print("=" * 70)
-    print("\n  👉 Connect your phone with Expo Go:")
-    print(f"  1. Connect your phone to the same Wi-Fi network as this PC ({lan_ip}).")
-    print(f"  2. Open the Expo Go app on your phone and tap 'Scan QR code'.")
-    print(f"  3. Scan the QR code displayed at http://localhost:3000/mobile or in the Expo terminal.\n")
+    print("  💡 SIMULTANEOUS TESTING MODES:")
+    print(f"  • Real Phone (Expo Go): Connect to Wi-Fi ({lan_ip}) & scan QR at http://localhost:3000/mobile")
+    print(f"  • Browser Preview:      Open Mobile App in browser at http://localhost:8081")
+    print(f"  • Real-Time Sync Lab:   Run live test at http://localhost:3000/mobile -> 'Live Sync Lab'")
+    print("=" * 70)
 
     time.sleep(1)
+    webbrowser.open("http://localhost:3000")
     webbrowser.open("http://localhost:3000/mobile")
 
     print("[Press Ctrl+C at any time to gracefully stop all services]\n")
