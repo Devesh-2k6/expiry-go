@@ -37,21 +37,27 @@ start "Meeva Web App" cmd /k "title Meeva Web App && python serve_web.py"
 echo.
 
 :: 6. Start React Native Expo Go Mobile Server with QR Scanner
-echo [4/4] Starting React Native Expo Go Mobile Server (%LAN_IP%:8081)...
+echo [4/5] Starting React Native Expo Go Mobile Server (%LAN_IP%:8081)...
 start "Meeva Mobile App" cmd /k "title Meeva Expo Go Server && cd mobile && set REACT_NATIVE_PACKAGER_HOSTNAME=%LAN_IP% && npx expo start --go --host lan -c"
 echo.
 
-:: 7. Open Browser Companion & Web App
+:: 7. Start Cloudflare Public HTTPS Tunnel for Worldwide Access
+echo [5/5] Starting Global Cloudflare HTTPS Tunnel (Worldwide Access)...
+start "Meeva Global Tunnel" cmd /k "title Meeva Global Cloudflare Tunnel && npx -y cloudflared tunnel --protocol http2 --url http://127.0.0.1:8000"
+echo.
+
+:: 8. Open Browser Companion & Web App
 timeout /t 2 /nobreak >nul
 start http://localhost:3000
 start http://localhost:3000/mobile
 
 echo ============================================================
-echo   ✅ SUCCESS! All services launched and synchronized:
-echo   • Web App:       http://localhost:3000   (LAN: http://%LAN_IP%:3000)
-echo   • Backend API:   http://localhost:8000   (Docs: http://localhost:8000/docs)
-echo   • Mobile App:    Expo Go (Scan QR in Mobile window or open exp://%LAN_IP%:8081)
-echo   • Web Companion: Opened http://localhost:3000/mobile (QR Scanner & Sync Lab)
+echo   ✅ SUCCESS! All 4 services launched and synchronized:
+echo   • Web App:        http://localhost:3000   (LAN: http://%LAN_IP%:3000)
+echo   • Backend API:    http://localhost:8000   (Docs: http://localhost:8000/docs)
+echo   • Mobile App:     Expo Go (Scan QR in Mobile window or open exp://%LAN_IP%:8081)
+echo   • Global Tunnel:  Look at 'Meeva Global Tunnel' window for your public https://*.trycloudflare.com link!
+echo   • Web Companion:  Opened http://localhost:3000/mobile (QR Scanner & Sync Lab)
 echo.
 echo   📱 HOW TO USE WEB AND APP SIMULTANEOUSLY:
 echo   1. PHONE (Expo Go): Connect to Wi-Fi (%LAN_IP%) and scan QR at http://localhost:3000/mobile.

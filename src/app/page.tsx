@@ -45,7 +45,7 @@ import Image from "next/image";
 
 // Dynamically import client components
 const HeroMap = dynamic(() => import('@/components/map/HeroMap'), { ssr: false });
-const CustomCursor = dynamic(() => import('@/components/ui/CustomCursor'), { ssr: false });
+// Custom cursor removed for pristine mobile & desktop smoothness
 
 export default function Home() {
   const router = useRouter();
@@ -185,7 +185,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFE] text-slate-900 font-sans selection:bg-purple-500/25 overflow-x-hidden relative">
-      <CustomCursor />
+      {/* Custom cursor removed for pristine mobile & desktop smoothness */}
       
       {/* Scroll Progress Bar */}
       <motion.div

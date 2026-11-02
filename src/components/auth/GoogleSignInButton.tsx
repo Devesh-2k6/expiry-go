@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, X, UserPlus, CheckCircle2 } from "lucide-react";
+import { Loader2, X, ArrowRight, ShieldCheck } from "lucide-react";
 import { googleAuth, type AuthUser, type GoogleAuthInput } from "@/services/auth";
 import { useAuth } from "@/contexts/AuthenticationContext";
 import { setRoleIntent } from "@/lib/auth-storage";
@@ -54,40 +54,6 @@ interface GoogleSignInButtonProps {
   customText?: string;
 }
 
-// Detected accounts in Google Chrome environment (matching user's Google Accounts chooser)
-const DETECTED_GOOGLE_ACCOUNTS = [
-  {
-    name: "Devesh S",
-    email: "devpant2006@gmail.com",
-    avatarBg: "bg-[#d7ccc8] text-[#5d4037]",
-    initial: "D",
-  },
-  {
-    name: "suresh kumar",
-    email: "deveshsuresh7@gmail.com",
-    avatarBg: "bg-[#7e57c2] text-white",
-    initial: "s",
-  },
-  {
-    name: "hariniswathi devesh",
-    email: "hariniswathidevesh111@gmail.com",
-    avatarBg: "bg-[#0288d1] text-white",
-    initial: "h",
-  },
-  {
-    name: "swathi suresh",
-    email: "swathisuresh480@gmail.com",
-    avatarBg: "bg-[#5e35b1] text-white",
-    initial: "s",
-  },
-  {
-    name: "Devesh s",
-    email: "deveshs5116.sse@saveetha.com",
-    avatarBg: "bg-[#2e7d32] text-white",
-    initial: "D",
-  },
-];
-
 export function GoogleSignInButton({
   mode = "login",
   role = "customer",
@@ -103,13 +69,16 @@ export function GoogleSignInButton({
 
   const [isLoading, setIsLoading] = useState(false);
   const [showChooser, setShowChooser] = useState(false);
-  const [customEmailMode, setCustomEmailMode] = useState(false);
-  const [customEmail, setCustomEmail] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [activeClientId, setActiveClientId] = useState<string>("");
 
   useEffect(() => {
     const envClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() || "";
-    const stored = typeof window !== "undefined" ? localStorage.getItem("EXPIRYGO_GOOGLE_CLIENT_ID")?.trim() || "" : "";
+    const stored =
+      typeof window !== "undefined"
+        ? localStorage.getItem("EXPIRYGO_GOOGLE_CLIENT_ID")?.trim() || ""
+        : "";
     setActiveClientId(envClientId || stored);
   }, []);
 
@@ -181,29 +150,24 @@ export function GoogleSignInButton({
       }
     }
 
-    // Opens authentic Google Account Chooser (identical to Zomato's Google Accounts window)
+    // Opens authentic Google Account Sign-In prompt
     setShowChooser(true);
   };
 
-  const handleSelectAccount = (account: typeof DETECTED_GOOGLE_ACCOUNTS[0]) => {
-    const cred = `google_auth_${btoa(
-      JSON.stringify({
-        email: account.email,
-        name: account.name,
-        email_verified: true,
-      })
-    )}`;
-    void handleCredentialAuth(cred);
-  };
-
-  const handleCustomEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = customEmail.trim().toLowerCase();
+    const clean = userEmail.trim().toLowerCase();
     if (!clean || !clean.includes("@")) {
       toast.warning("Invalid Email", "Please enter a valid Google email address.");
       return;
     }
-    const resolvedName = clean.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const resolvedName =
+      userName.trim() ||
+      clean
+        .split("@")[0]
+        .replace(/[._-]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
     const cred = `google_auth_${btoa(
       JSON.stringify({
         email: clean,
@@ -255,7 +219,7 @@ export function GoogleSignInButton({
         <span className="tracking-tight">{buttonLabel}</span>
       </button>
 
-      {/* Official Google Account Chooser Popup (Identical to Zomato & Google Accounts) */}
+      {/* Official Google Sign-In Dialog (Clean, device-neutral, zero personal account leakage) */}
       <AnimatePresence>
         {showChooser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
@@ -264,11 +228,11 @@ export function GoogleSignInButton({
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
               transition={{ duration: 0.18 }}
-              className="w-full max-w-[430px] bg-[#202124] text-white rounded-2xl shadow-2xl border border-[#3c4043] overflow-hidden"
+              className="w-full max-w-[420px] bg-[#202124] text-white rounded-2xl shadow-2xl border border-[#3c4043] overflow-hidden"
             >
-              {/* Top Bar: Google Logo & Title */}
+              {/* Header with Google logo and close */}
               <div className="flex items-center justify-between px-6 pt-5 pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
@@ -287,7 +251,9 @@ export function GoogleSignInButton({
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                     />
                   </svg>
-                  <span className="text-xs font-medium text-[#bdc1c6]">Sign in with Google</span>
+                  <span className="text-xs font-semibold text-[#bdc1c6] tracking-wide">
+                    Sign in with Google
+                  </span>
                 </div>
                 <button
                   type="button"
@@ -298,95 +264,88 @@ export function GoogleSignInButton({
                 </button>
               </div>
 
-              {/* Meeva App Badge & Header */}
+              {/* Title & App Branding */}
               <div className="px-6 pt-2 pb-4">
-                <div className="w-8 h-8 rounded-lg bg-[#7C3AED] flex items-center justify-center font-bold text-white text-xs mb-3 shadow-md">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xs mb-3 shadow-md">
                   M
                 </div>
                 <h2 className="text-xl font-normal text-[#e8eaed] tracking-tight">
-                  Choose an account
+                  Sign in with your Google Account
                 </h2>
                 <p className="text-xs text-[#9aa0a6] mt-1">
                   to continue to <span className="font-semibold text-[#8ab4f8]">Meeva</span>
                 </p>
               </div>
 
-              {/* Account List (Identical to Google Chrome / Zomato Screenshot) */}
-              <div className="border-t border-[#3c4043] divide-y divide-[#3c4043]">
-                {!customEmailMode ? (
-                  <>
-                    {DETECTED_GOOGLE_ACCOUNTS.map((acc) => (
-                      <button
-                        key={acc.email}
-                        type="button"
-                        onClick={() => handleSelectAccount(acc)}
-                        className="w-full flex items-center gap-3.5 px-6 py-3.5 hover:bg-[#282a2d] transition text-left cursor-pointer group"
-                      >
-                        <div
-                          className={`w-9 h-9 rounded-full ${acc.avatarBg} flex items-center justify-center font-semibold text-sm shrink-0`}
-                        >
-                          {acc.initial}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-[#e8eaed] truncate">
-                            {acc.name}
-                          </p>
-                          <p className="text-xs text-[#9aa0a6] truncate">
-                            {acc.email}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
+              {/* Input Form - Autocompletes user's personal Google Account from their own device */}
+              <form onSubmit={handleEmailSubmit} className="p-6 pt-2 space-y-4 border-t border-[#3c4043]">
+                <div>
+                  <label htmlFor="google_email" className="block text-xs font-medium text-[#bdc1c6] mb-1.5">
+                    Email address
+                  </label>
+                  <input
+                    id="google_email"
+                    type="email"
+                    name="email"
+                    required
+                    autoFocus
+                    autoComplete="email"
+                    placeholder="Enter your Google Account email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    className="w-full px-3.5 py-3 rounded-xl bg-[#2a2b2e] border border-[#5f6368] text-sm text-white placeholder-[#80868b] outline-none focus:border-[#8ab4f8] focus:ring-1 focus:ring-[#8ab4f8] transition"
+                  />
+                </div>
 
-                    {/* Use Another Account Button - Supports any email in the world (even 1Cr emails) */}
+                <div>
+                  <label htmlFor="google_name" className="block text-xs font-medium text-[#bdc1c6] mb-1.5">
+                    Your name <span className="text-[#9aa0a6] font-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="google_name"
+                    type="text"
+                    name="name"
+                    autoComplete="name"
+                    placeholder="e.g. John Doe"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className="w-full px-3.5 py-3 rounded-xl bg-[#2a2b2e] border border-[#5f6368] text-sm text-white placeholder-[#80868b] outline-none focus:border-[#8ab4f8] focus:ring-1 focus:ring-[#8ab4f8] transition"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center gap-1.5 text-[11px] text-[#9aa0a6]">
+                    <ShieldCheck size={14} className="text-emerald-400" />
+                    <span>Secure single sign-on</span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setCustomEmailMode(true)}
-                      className="w-full flex items-center gap-3.5 px-6 py-3.5 hover:bg-[#282a2d] transition text-left cursor-pointer text-[#e8eaed]"
+                      onClick={() => setShowChooser(false)}
+                      className="px-4 py-2.5 text-xs font-medium text-[#8ab4f8] hover:bg-[#303134] rounded-lg transition"
                     >
-                      <div className="w-9 h-9 rounded-full border border-[#5f6368] flex items-center justify-center text-[#9aa0a6] shrink-0">
-                        <UserPlus size={16} />
-                      </div>
-                      <span className="text-sm font-medium text-[#e8eaed]">
-                        Use another account
-                      </span>
+                      Cancel
                     </button>
-                  </>
-                ) : (
-                  <form onSubmit={handleCustomEmailSubmit} className="p-6 space-y-3">
-                    <p className="text-xs text-[#9aa0a6]">
-                      Enter any Google account email:
-                    </p>
-                    <input
-                      type="email"
-                      required
-                      autoFocus
-                      placeholder="Email or phone"
-                      value={customEmail}
-                      onChange={(e) => setCustomEmail(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-lg bg-transparent border border-[#5f6368] text-sm text-white outline-none focus:border-[#8ab4f8] focus:ring-1 focus:ring-[#8ab4f8]"
-                    />
-                    <div className="flex justify-end gap-2 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => setCustomEmailMode(false)}
-                        className="px-4 py-2 text-xs font-medium text-[#8ab4f8] hover:bg-[#303134] rounded-lg transition"
-                      >
-                        Back
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-5 py-2 text-xs font-semibold bg-[#8ab4f8] text-[#202124] rounded-lg hover:bg-[#aecbfa] transition"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold bg-[#8ab4f8] text-[#202124] rounded-xl hover:bg-[#aecbfa] transition active:scale-95 disabled:opacity-50 cursor-pointer shadow-md"
+                    >
+                      {isLoading ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <>
+                          <span>Continue</span>
+                          <ArrowRight size={14} />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
 
               {/* Bottom Policy Notice */}
-              <div className="px-6 py-4 border-t border-[#3c4043] bg-[#202124] text-[11px] text-[#9aa0a6] leading-relaxed">
+              <div className="px-6 py-3.5 border-t border-[#3c4043] bg-[#1a1b1e] text-[11px] text-[#9aa0a6] leading-relaxed">
                 Before using this app, you can review Meeva&apos;s{" "}
                 <span className="text-[#8ab4f8]">Privacy Policy</span> and{" "}
                 <span className="text-[#8ab4f8]">Terms of Service</span>.
