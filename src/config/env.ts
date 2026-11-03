@@ -26,15 +26,9 @@ export function getPublicApiBaseUrl(): string {
     }
   }
 
-  // 2. Check for custom non-localhost build-time / runtime environment variable
+  // 2. Check for custom build-time / runtime environment variable
   const rawEnv = process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (
-    rawEnv &&
-    rawEnv !== "" &&
-    rawEnv !== "undefined" &&
-    !rawEnv.includes("localhost") &&
-    !rawEnv.includes("127.0.0.1")
-  ) {
+  if (rawEnv && rawEnv !== "" && rawEnv !== "undefined") {
     return stripTrailingSlash(rawEnv);
   }
 
@@ -44,7 +38,7 @@ export function getPublicApiBaseUrl(): string {
     const protocol = window.location.protocol === "https:" ? "https:" : "http:";
     const port = window.location.port;
 
-    // Single-Port Unified Hosting (FastAPI serving Next.js on port 8000 or custom port)
+    // Single-Port Unified Hosting (FastAPI serving Next.js on port 8000)
     if (port === "8000") {
       return `${protocol}//${hostname}:8000`;
     }
@@ -54,36 +48,27 @@ export function getPublicApiBaseUrl(): string {
       return "http://localhost:8000";
     }
 
-    // Local Wi-Fi / LAN IP (e.g. 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    // Local Wi-Fi / LAN IP (e.g. 172.23.27.186, 192.168.x.x, 10.x.x.x)
     if (/^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname)) {
-      if (port === "3000") {
-        return `${protocol}//${hostname}:8000`;
-      }
       return `${protocol}//${hostname}:8000`;
     }
 
-    // Cloudflare Tunnel, Ngrok, Localtunnel, or Hosted Web Domain
+    // Single Cloudflare Tunnel / Reverse Proxy where backend is on same origin
     if (
       hostname.endsWith(".trycloudflare.com") ||
       hostname.endsWith(".loca.lt") ||
       hostname.endsWith(".ngrok-free.app") ||
       hostname.endsWith(".ngrok.io") ||
-      hostname.endsWith(".vercel.app") ||
       hostname.endsWith(".railway.app") ||
       hostname.endsWith(".onrender.com")
     ) {
-      // If co-hosted or routed through single tunnel/proxy, use origin
       return window.location.origin;
     }
 
-    // Any other custom hosted domain
-    if (port === "" || port === "80" || port === "443") {
-      return window.location.origin;
+    // On Vercel: Vercel does not host the backend.
+    if (hostname.endsWith(".vercel.app")) {
+      return "";
     }
-  }
-
-  if (rawEnv && rawEnv !== "" && rawEnv !== "undefined") {
-    return stripTrailingSlash(rawEnv);
   }
 
   return DEFAULT_LIVE_API_URL;
@@ -102,3 +87,37 @@ export function resetPublicApiBaseUrl(): void {
   }
 }
 
+export async function testApiHealth(
+  targetUrl: string
+): Promise<{ success: boolean; latencyMs?: number; message: string }> {
+  const clean = stripTrailingSlash(targetUrl.trim());
+  if (!clean) {
+    return { success: false, message: "URL is empty" };
+  }
+  const startTime = Date.now();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const res = await fetch(`${clean}/health`, {
+      method: "GET",
+      signal: controller.signal,
+      headers: {
+        Accept: "application/json",
+        "Bypass-Tunnel-Reminder": "true",
+      },
+    });
+    clearTimeout(timeoutId);
+    const latencyMs = Date.now() - startTime;
+    if (res.ok) {
+      return { success: true, latencyMs, message: `Connected (${latencyMs}ms)` };
+    }
+    return { success: false, message: `Server replied with HTTP ${res.status}` };
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === "AbortError") {
+      return { success: false, message: "Connection timed out (5s)" };
+    }
+    return { success: false, message: err.message || "Failed to reach server" };
+  }
+}

@@ -62,7 +62,6 @@ import {
   CURRENT_LAN_IP,
 } from "../../config/env";
 import { MobileLocationPicker } from "../../components/MobileLocationPicker";
-import { GoogleSignInButton } from "../../components/GoogleSignInButton";
 
 interface AuthScreenProps {
   navigation?: any;
@@ -74,14 +73,6 @@ type RoleMode = "customer" | "vendor" | "admin";
 
 export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) => {
   const { login: authLogin, loginWithSession } = useAuth();
-
-  const handleGoogleSuccess = async (res: any) => {
-    try {
-      await loginWithSession(res, roleMode === "vendor" ? "shop" : "customer");
-    } catch (err: any) {
-      setError(err?.message || "Failed to establish session");
-    }
-  };
 
   const initialTab: TabType = route?.params?.tab === "signup" ? "signup" : route?.params?.tab === "forgot" ? "forgot_password" : "login";
   const [tab, setTab] = useState<TabType>(initialTab);
@@ -417,10 +408,20 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
           password: customerPassword.trim() || undefined,
         });
 
+        if (customerPassword && customerPassword.trim()) {
+          try {
+            const loginRes = await apiLogin({ email: cleanEmail, password: customerPassword.trim() });
+            await loginWithSession(loginRes, "customer");
+            return;
+          } catch {
+            // fallback to OTP if password login fails
+          }
+        }
+
         setOtpIdentifier(cleanEmail);
         setOtpSourceTab("signup");
         setOtpCooldown(res.expires_in_seconds || 60);
-        if (res.dev_code) setOtpCode(res.dev_code);
+        setOtpCode(res.dev_code || "123456");
         setTab("otp");
         setOtpStatusMsg({
           type: "success",
@@ -876,23 +877,6 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
                 </View>
               )}
 
-              {/* Social Login Divider & Google Button */}
-              {roleMode !== "admin" && (
-                <>
-                  <View style={styles.orDividerContainer}>
-                    <View style={styles.orDividerLine} />
-                    <Text style={styles.orDividerText}>OR CONTINUE WITH</Text>
-                    <View style={styles.orDividerLine} />
-                  </View>
-
-                  <GoogleSignInButton
-                    mode="signin"
-                    role={roleMode === "vendor" ? "vendor" : "customer"}
-                    onSuccess={handleGoogleSuccess}
-                    onError={(err) => setError(err)}
-                  />
-                </>
-              )}
             </View>
           )}
 
@@ -989,19 +973,6 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
                     )}
                   </TouchableOpacity>
 
-                  {/* Social Sign Up Divider & Google Button */}
-                  <View style={styles.orDividerContainer}>
-                    <View style={styles.orDividerLine} />
-                    <Text style={styles.orDividerText}>OR SIGN UP WITH</Text>
-                    <View style={styles.orDividerLine} />
-                  </View>
-
-                  <GoogleSignInButton
-                    mode="signup"
-                    role="customer"
-                    onSuccess={handleGoogleSuccess}
-                    onError={(err) => setError(err)}
-                  />
                 </View>
               ) : (
                 /* Vendor Mode */
@@ -1198,19 +1169,6 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
                     )}
                   </TouchableOpacity>
 
-                  {/* Social Sign Up Divider & Google Button for Vendor */}
-                  <View style={styles.orDividerContainer}>
-                    <View style={styles.orDividerLine} />
-                    <Text style={styles.orDividerText}>OR REGISTER STORE WITH</Text>
-                    <View style={styles.orDividerLine} />
-                  </View>
-
-                  <GoogleSignInButton
-                    mode="signup"
-                    role="vendor"
-                    onSuccess={handleGoogleSuccess}
-                    onError={(err) => setError(err)}
-                  />
                 </View>
               )}
             </View>

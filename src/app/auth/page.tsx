@@ -41,7 +41,7 @@ import {
   forgotPassword,
   resetPassword,
 } from "@/services/auth";
-import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { getPublicApiBaseUrl, setPublicApiBaseUrl, resetPublicApiBaseUrl, testApiHealth } from "@/config/env";
 
 const InteractiveLocationPicker = dynamic(() => import("@/components/InteractiveLocationPicker"), {
   ssr: false,
@@ -1260,47 +1260,10 @@ export default function AuthPage() {
               ) : (
                 <Zap size={18} />
               )}
-              {roleMode === "customer"
-                ? "Continue with OTP Verification"
-                : "Register Store & Verify OTP"}
+              {roleMode === "customer" ? "Create Customer Account" : "Register Store & Complete Setup"}
             </button>
 
-            {/* Social Authentication: Google Sign Up */}
-            {roleMode !== "admin" && (
-              <div className="space-y-3 pt-2">
-                <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200 dark:border-gray-800" />
-                  </div>
-                  <div className="relative flex justify-center text-[11px] uppercase font-extrabold tracking-wider">
-                    <span className="bg-white dark:bg-gray-900 px-3 text-slate-400 dark:text-gray-500">
-                      Or sign up with
-                    </span>
-                  </div>
-                </div>
-
-                <GoogleSignInButton
-                  mode="signup"
-                  role={roleMode === "vendor" ? "vendor" : "customer"}
-                  vendorMetadata={
-                    roleMode === "vendor"
-                      ? {
-                          shop_name: vendorShopName,
-                          category: vendorCategory,
-                          phone_number: vendorPhone,
-                          upi_id: vendorUpiId,
-                          address: vendorAddress,
-                          latitude: vendorLat,
-                          longitude: vendorLng,
-                          photo_url: vendorPhotoUrl,
-                          document_url: vendorDocUrl,
-                        }
-                      : undefined
-                  }
-                />
-              </div>
-            )}
-          </form>
+                      </form>
         )}
 
         {/* TAB: SIGN IN (PASSWORD vs 6-DIGIT OTP) */}
@@ -1463,29 +1426,82 @@ export default function AuthPage() {
               </form>
             )}
 
-            {/* Social Authentication: Google Sign In */}
-            {roleMode !== "admin" && (
-              <div className="space-y-3 pt-2">
-                <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200 dark:border-gray-800" />
-                  </div>
-                  <div className="relative flex justify-center text-[11px] uppercase font-extrabold tracking-wider">
-                    <span className="bg-white dark:bg-gray-900 px-3 text-slate-400 dark:text-gray-500">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
-
-                <GoogleSignInButton
-                  mode="login"
-                  role={roleMode === "vendor" ? "vendor" : "customer"}
-                />
-              </div>
-            )}
-          </div>
+                      </div>
         )}
       </div>
+
+      {/* Backend API Configuration Modal */}
+      {serverModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                ⚙️ Backend API Configuration
+              </h3>
+              <button
+                type="button"
+                onClick={() => setServerModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+              When deployed on Vercel, connect your frontend to your live backend (e.g. Railway, Cloudflare tunnel, or your local machine IP).
+            </p>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
+                API Base URL
+              </label>
+              <input
+                type="text"
+                value={customApiUrl}
+                onChange={(e) => setCustomApiUrl(e.target.value)}
+                placeholder="https://your-api.railway.app or http://172.23.27.186:8000"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-mono text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            {testResult && (
+              <div
+                className={`p-2.5 rounded-xl text-xs font-medium ${
+                  testResult.success
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200"
+                    : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200"
+                }`}
+              >
+                {testResult.success ? "✓ " : "✕ "} {testResult.message}
+              </div>
+            )}
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleTestServer}
+                disabled={testingConnection || !customApiUrl.trim()}
+                className="flex-1 py-2.5 px-3 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 text-slate-700 dark:text-gray-200 rounded-xl text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+              >
+                {testingConnection ? "Testing..." : "Test Connection"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveServer}
+                disabled={!customApiUrl.trim()}
+                className="flex-1 py-2.5 px-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-purple-600/20 disabled:opacity-50 cursor-pointer"
+              >
+                Save & Connect
+              </button>
+            </div>
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={handleResetServer}
+                className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-gray-300 underline cursor-pointer"
+              >
+                Reset to Default
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

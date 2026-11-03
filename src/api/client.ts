@@ -14,6 +14,14 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const { json: jsonBody, body: explicitBody, headers: initHeaders, skipAuth, ...rest } = options;
 
   const base = getPublicApiBaseUrl();
+  if (!base && typeof window !== "undefined") {
+    throw new ApiError(
+      503,
+      null,
+      "Backend server is not configured. Please click the Backend Settings button to set your live API URL."
+    );
+  }
+
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = `${base}${normalizedPath}`;
 
@@ -62,9 +70,12 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     if (err instanceof ApiError) {
       throw err;
     }
-    const errorMsg = err.name === 'AbortError' 
-      ? "Server request timed out. Please try again."
-      : (err.message || "Network request failed");
+    let errorMsg = err.message || "Network request failed";
+    if (err.name === "AbortError") {
+      errorMsg = "Server request timed out. Please try again.";
+    } else if (err.message === "Failed to fetch" || err.name === "TypeError") {
+      errorMsg = `Cannot reach backend API at ${base || "not set"}. Please verify your backend server is running or configure your API URL.`;
+    }
     throw new ApiError(503, null, errorMsg);
   }
 }
