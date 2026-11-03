@@ -35,7 +35,10 @@ export function getPublicApiBaseUrl(): string {
   // 2. Check for custom build-time / runtime environment variable
   const rawEnv = process.env.NEXT_PUBLIC_API_URL?.trim();
   if (rawEnv && rawEnv !== "" && rawEnv !== "undefined") {
-    return stripTrailingSlash(rawEnv);
+    const cleanEnv = stripTrailingSlash(rawEnv);
+    if (!cleanEnv.includes("trycloudflare.com") && !cleanEnv.includes("loca.lt")) {
+      return cleanEnv;
+    }
   }
 
   // 3. Auto-detect based on current browser location
