@@ -17,3 +17,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ id: `ord_${Date.now()}`, status: "PENDING" });
   }
 }
+

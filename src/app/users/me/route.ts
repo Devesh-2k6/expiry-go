@@ -47,3 +47,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to retrieve user" }, { status: 500 });
   }
 }
+

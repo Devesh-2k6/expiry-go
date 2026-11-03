@@ -64,3 +64,4 @@ export async function PUT(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to update shop" }, { status: 500 });
   }
 }
+

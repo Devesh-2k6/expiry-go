@@ -25,3 +25,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to process forgot password" }, { status: 500 });
   }
 }
+
