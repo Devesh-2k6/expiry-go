@@ -3,14 +3,18 @@ setlocal enabledelayedexpansion
 title Meeva Mobile - Expo Go LAN Mode
 
 :: 1. Auto-detect Wi-Fi IPv4 address and sync configs
-for /f "tokens=*" %%i in ('python get_ip.py') do set LAN_IP=%%i
+for /f "tokens=*" %%i in ('node get_ip.cjs 2^>nul') do set LAN_IP=%%i
 
 if "%LAN_IP%"=="" (
-    set LAN_IP=127.0.0.1
+    for /f "tokens=*" %%i in ('python get_ip.py 2^>nul') do set LAN_IP=%%i
+)
+
+if "%LAN_IP%"=="" (
+    set LAN_IP=172.23.27.186
 )
 
 :: 2. Ensure Port 8081 is clean
-python -c "import subprocess, re; out = subprocess.getoutput('netstat -ano | findstr :8081'); pids = set(re.findall(r'\s+(\d+)\r?$', out, re.M)); [subprocess.run(['taskkill', '/F', '/PID', pid], capture_output=True) for pid in pids if pid != '0']" 2>nul
+node clean_ports.cjs 2>nul || python -c "import subprocess, re; out = subprocess.getoutput('netstat -ano | findstr :8081'); pids = set(re.findall(r'\s+(\d+)\r?$', out, re.M)); [subprocess.run(['taskkill', '/F', '/PID', pid], capture_output=True) for pid in pids if pid != '0']" 2>nul
 
 echo ============================================================
 echo   📱 MEEVA MOBILE - EXPO GO LAN MODE (exp://%LAN_IP%:8081)

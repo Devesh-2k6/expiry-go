@@ -18,7 +18,10 @@
     "mobile": "npm --prefix mobile start",
     "mobile:android": "npm --prefix mobile run android",
     "mobile:ios": "npm --prefix mobile run ios",
-    "mobile:web": "npm --prefix mobile run web"
+    "mobile:web": "npm --prefix mobile run web",
+    "build:android:apk": "build-android.bat apk",
+    "build:android:aab": "build-android.bat aab",
+    "build:android:clean": "build-android.bat clean"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",

@@ -4,7 +4,7 @@ import Constants from "expo-constants";
 
 export const API_OVERRIDE_KEY = "EXPIRYGO_MOBILE_API_OVERRIDE";
 
-export const CURRENT_LAN_IP = "192.168.1.5";
+export const CURRENT_LAN_IP = "172.23.27.186";
 export const LAN_API_URL = `http://${CURRENT_LAN_IP}:8000`;
 export const TUNNEL_API_URL = "https://william-keep-transcription-ctrl.trycloudflare.com";
 

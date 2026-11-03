@@ -41,3 +41,4 @@ for s in scripts:
 
 if leak_count == 0:
     print("SUCCESS: 0 leaks across all production bundles!")
+

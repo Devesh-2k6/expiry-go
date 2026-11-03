@@ -202,6 +202,60 @@ All shops have pre-loaded products with discounts!
 
 ---
 
+## **STEP 7: Build & Deploy Android Mobile App (Gradle)** 📱
+
+The native Android app can be built into a standalone **APK** (for direct downloads and sideload testing) or an **Android App Bundle (.aab)** (for Google Play Console submission).
+
+### Option A: Using the Automated Build Script (Recommended)
+
+From the project root directory, run:
+```bash
+build-android.bat
+```
+Or with direct arguments:
+- **Build Release APK:** `build-android.bat apk` (or `npm run build:android:apk`)
+- **Build Release AAB (Play Store):** `build-android.bat aab` (or `npm run build:android:aab`)
+- **Generate Production Keystore:** `build-android.bat keystore`
+- **Clean Build Cache:** `build-android.bat clean` (or `npm run build:android:clean`)
+
+The script automatically detects Android Studio's bundled JDK (JBR) and your Android SDK, creates `local.properties`, bundles React Native JavaScript, and compiles the native binaries.
+
+### Option B: Manual Gradle Commands
+
+1. **Configure Java & SDK Environment:**
+   ```powershell
+   $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+   $env:ANDROID_HOME="C:\Users\$env:USERNAME\AppData\Local\Android\Sdk"
+   $env:EXPO_PUBLIC_API_URL="https://your-backend.up.railway.app"
+   ```
+
+2. **Navigate to Android directory:**
+   ```powershell
+   cd mobile\android
+   ```
+
+3. **Build Release APK (Direct Install):**
+   ```powershell
+   .\gradlew.bat assembleRelease
+   ```
+   Output: `mobile\android\app\build\outputs\apk\release\app-release.apk`
+
+4. **Build Release AAB (Google Play Store):**
+   ```powershell
+   .\gradlew.bat bundleRelease
+   ```
+   Output: `mobile\android\app\build\outputs\bundle\release\app-release.aab`
+
+### Production Signing Keystore
+
+For Google Play deployment, generate your production keystore:
+```powershell
+build-android.bat keystore
+```
+This generates `mobile\android\app\release.keystore` which is automatically detected by `app/build.gradle`.
+
+---
+
 ## **Cost Breakdown**
 
 - Vercel: **FREE** (for hobby tier)

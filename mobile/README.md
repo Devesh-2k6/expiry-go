@@ -54,3 +54,42 @@ By default:
 - Android Emulators connect to `http://10.0.2.2:8000`.
 - iOS Simulators & Web connect to `http://localhost:8000`.
 - Physical phones on LAN: Navigate to **Impact (Profile) -> Backend API Configuration** and set your local machine's IP (e.g. `http://192.168.1.15:8000`).
+
+---
+
+## 📦 Gradle Build for Deployment (Android)
+
+To compile standalone Android deployment binaries:
+
+### Quick Build (Windows):
+- **Build Release APK (Direct Install / Sideload):**
+  ```cmd
+  ..\build-android.bat apk
+  ```
+  *(Output: `android\app\build\outputs\apk\release\app-release.apk`)*
+
+- **Build Release AAB (Google Play Store):**
+  ```cmd
+  ..\build-android.bat aab
+  ```
+  *(Output: `android\app\build\outputs\bundle\release\app-release.aab`)*
+
+- **Generate Play Store Release Keystore:**
+  ```cmd
+  ..\build-android.bat keystore
+  ```
+
+### Manual Gradle Commands:
+```powershell
+# Set Java and Android SDK environment
+$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
+$env:ANDROID_HOME="C:\Users\$env:USERNAME\AppData\Local\Android\Sdk"
+
+# Build APK
+cd android
+.\gradlew.bat assembleRelease
+
+# Build AAB (for Google Play)
+.\gradlew.bat bundleRelease
+```
+

@@ -7,10 +7,14 @@ echo ============================================================
 echo.
 
 :: 1. Auto-detect Wi-Fi IPv4 address and sync configs
-for /f "tokens=*" %%i in ('python get_ip.py') do set LAN_IP=%%i
+for /f "tokens=*" %%i in ('node get_ip.cjs 2^>nul') do set LAN_IP=%%i
 
 if "%LAN_IP%"=="" (
-    set LAN_IP=127.0.0.1
+    for /f "tokens=*" %%i in ('python get_ip.py 2^>nul') do set LAN_IP=%%i
+)
+
+if "%LAN_IP%"=="" (
+    set LAN_IP=172.23.27.186
 )
 
 echo [Detected Active Network IP]: %LAN_IP%
@@ -18,7 +22,7 @@ echo.
 
 :: 2. Ensure Ports 8000, 3000, and 8081 are clean
 echo [Cleaning Ports 8000, 3000, 8081]...
-python clean_ports.py
+node clean_ports.cjs 2>nul || python clean_ports.py 2>nul
 echo.
 
 :: 3. Ensure Database & Admin Account Ready
