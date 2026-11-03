@@ -38,10 +38,15 @@ function formatFastApiDetail(detail: unknown): string {
 }
 
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
+  if (error instanceof ApiError) {
+    if (error.message === "Failed to fetch" || error.message.toLowerCase().includes("failed to fetch")) {
+      return "Backend server is offline or unreachable. Switched to instant demo mode.";
+    }
+    return error.message;
+  }
   if (error instanceof Error) {
-    if (error.message === "Failed to fetch") {
-      return "Unable to connect to the server. Please check your internet or if the backend is running.";
+    if (error.message === "Failed to fetch" || error.message.toLowerCase().includes("failed to fetch")) {
+      return "Backend server is offline or unreachable. Switched to instant demo mode.";
     }
     return error.message;
   }
