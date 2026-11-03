@@ -116,6 +116,7 @@ export default function AuthPage() {
   
   const [roleMode, setRoleMode] = useState<RoleMode>(initialRole);
   const [loginAuthType, setLoginAuthType] = useState<"password" | "otp">("password");
+  const [signupAuthType, setSignupAuthType] = useState<"password" | "otp">("password");
   const [otpSourceTab, setOtpSourceTab] = useState<"login" | "signup">("login");
 
   useEffect(() => {
@@ -372,15 +373,17 @@ export default function AuthPage() {
 
     try {
       if (roleMode === "customer") {
-        if (customerPassword && customerPassword.length < 6) {
-          setError("Password must be at least 6 characters long.");
-          setSubmitting(false);
-          return;
-        }
-        if (customerPassword && customerPassword !== customerConfirmPassword) {
-          setError("Passwords do not match. Please re-enter your password.");
-          setSubmitting(false);
-          return;
+        if (signupAuthType === "password") {
+          if (!customerPassword || customerPassword.length < 6) {
+            setError("Password must be at least 6 characters long.");
+            setSubmitting(false);
+            return;
+          }
+          if (customerPassword !== customerConfirmPassword) {
+            setError("Passwords do not match. Please re-enter your password.");
+            setSubmitting(false);
+            return;
+          }
         }
 
         const cleanEmail = customerEmail.trim().toLowerCase();
@@ -388,10 +391,10 @@ export default function AuthPage() {
           await customerSignup({
             name: customerName.trim(),
             email: cleanEmail,
-            password: customerPassword.trim() || undefined,
+            password: signupAuthType === "password" ? customerPassword.trim() : undefined,
           });
 
-          // Mandatory OTP verification step
+          // Mandatory OTP verification transition
           setOtpIdentifier(cleanEmail);
           setOtpSourceTab("signup");
           setOtpSent(true);
@@ -407,15 +410,17 @@ export default function AuthPage() {
         }
       } else {
         // Vendor Signup
-        if (vendorPassword && vendorPassword.length < 6) {
-          setError("Password must be at least 6 characters long.");
-          setSubmitting(false);
-          return;
-        }
-        if (vendorPassword && vendorPassword !== vendorConfirmPassword) {
-          setError("Passwords do not match. Please re-enter your password.");
-          setSubmitting(false);
-          return;
+        if (signupAuthType === "password") {
+          if (!vendorPassword || vendorPassword.length < 6) {
+            setError("Password must be at least 6 characters long.");
+            setSubmitting(false);
+            return;
+          }
+          if (vendorPassword !== vendorConfirmPassword) {
+            setError("Passwords do not match. Please re-enter your password.");
+            setSubmitting(false);
+            return;
+          }
         }
 
         const cleanEmail = vendorEmail.trim().toLowerCase();
@@ -426,7 +431,7 @@ export default function AuthPage() {
             email: cleanEmail,
             phone_number: vendorPhone.trim(),
             upi_id: vendorUpiId.trim() || undefined,
-            password: vendorPassword.trim() || undefined,
+            password: signupAuthType === "password" ? vendorPassword.trim() : undefined,
             photo_url: vendorPhotoUrl || "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800",
             document_url: vendorDocUrl || "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800",
             address: vendorAddress.trim() || undefined,
@@ -434,7 +439,7 @@ export default function AuthPage() {
             longitude: vendorLng,
           });
 
-          // Mandatory OTP verification step
+          // Mandatory OTP verification transition
           setOtpIdentifier(cleanEmail);
           setOtpSourceTab("signup");
           setOtpSent(true);
@@ -1029,289 +1034,405 @@ export default function AuthPage() {
 
         {/* TAB: SIGN UP (CUSTOMER / VENDOR) */}
         {tab === "signup" && (
-          <form onSubmit={handleSignupSubmit} autoComplete="off" className="space-y-4">
-            {roleMode === "customer" ? (
-              <>
-                <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                    Customer Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="cust_name_field"
-                    autoComplete="off"
-                    required
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                    placeholder="e.g. John Doe"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    name="cust_email_field"
-                    autoComplete="off"
-                    required
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                    placeholder="name@example.com"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-4">
+            {/* Signup Mode Switcher: Password + OTP vs Instant OTP */}
+            <div className="flex bg-slate-100 dark:bg-gray-800/80 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setSignupAuthType("password");
+                  setError("");
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  signupAuthType === "password"
+                    ? "bg-white dark:bg-gray-900 text-purple-700 dark:text-purple-300 shadow-sm font-black"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Password + OTP
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSignupAuthType("otp");
+                  setError("");
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  signupAuthType === "otp"
+                    ? "bg-white dark:bg-gray-900 text-purple-700 dark:text-purple-400 shadow-sm font-black"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                ⚡ 6-Digit OTP Sign Up
+              </button>
+            </div>
+
+            <form onSubmit={handleSignupSubmit} autoComplete="off" className="space-y-4">
+              {roleMode === "customer" ? (
+                <>
                   <div>
                     <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                      Create Password <span className="text-red-500">*</span>
+                      Customer Full Name
                     </label>
                     <input
-                      type={showSignupPassword ? "text" : "password"}
-                      name="cust_password_field"
-                      autoComplete="new-password"
+                      type="text"
+                      name="cust_name_field"
+                      autoComplete="off"
                       required
-                      minLength={6}
-                      value={customerPassword}
-                      onChange={(e) => setCustomerPassword(e.target.value)}
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
                       className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                      placeholder="Min 6 characters"
+                      placeholder="e.g. John Doe"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                      Confirm Password <span className="text-red-500">*</span>
+                      Email Address
                     </label>
                     <input
-                      type={showSignupPassword ? "text" : "password"}
-                      name="cust_confirm_password_field"
-                      autoComplete="new-password"
+                      type="email"
+                      name="cust_email_field"
+                      autoComplete="off"
                       required
-                      minLength={6}
-                      value={customerConfirmPassword}
-                      onChange={(e) => setCustomerConfirmPassword(e.target.value)}
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
                       className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                      placeholder="Repeat password"
+                      placeholder="name@example.com"
                     />
                   </div>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <input
-                    type="checkbox"
-                    id="showCustPass"
-                    checked={showSignupPassword}
-                    onChange={(e) => setShowSignupPassword(e.target.checked)}
-                    className="accent-purple-600 rounded"
-                  />
-                  <label htmlFor="showCustPass" className="cursor-pointer">Show password text</label>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                    Shop / Store Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="vendor_shop_name_field"
-                    autoComplete="off"
-                    required
-                    value={vendorShopName}
-                    onChange={(e) => setVendorShopName(e.target.value)}
-                    className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                    placeholder="Enter your store / business name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                    Store / Business Category <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {[
-                      { id: "grocery", label: "Grocery & Kirana", icon: "🛒" },
-                      { id: "hotel", label: "Hotel & Hospitality", icon: "🏨" },
-                      { id: "restaurant", label: "Restaurant & Eatery", icon: "🍽️" },
-                      { id: "bakery", label: "Bakery & Sweets", icon: "🥖" },
-                      { id: "supermarket", label: "Supermarket & Mart", icon: "🏪" },
-                      { id: "cafe", label: "Cafe & Beverage", icon: "☕" },
-                    ].map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setVendorCategory(cat.id)}
-                        className={`flex items-center gap-2 p-3 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
-                          vendorCategory === cat.id
-                            ? "border-purple-600 bg-purple-50 text-purple-800 shadow-sm ring-2 ring-purple-600/20"
-                            : "border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-700 dark:text-gray-300 hover:border-purple-300"
-                        }`}
-                      >
-                        <span className="text-base">{cat.icon}</span>
-                        <span className="truncate">{cat.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                    Vendor Email Address
-                  </label>
-                  <input
-                    type="email"
-                    name="vendor_email_field"
-                    autoComplete="off"
-                    required
-                    value={vendorEmail}
-                    onChange={(e) => setVendorEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                    placeholder="vendor@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="vendor_phone_field"
-                    autoComplete="off"
-                    required
-                    value={vendorPhone}
-                    onChange={(e) => setVendorPhone(e.target.value)}
-                    className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                    placeholder="10-digit mobile number"
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400">
-                      Store UPI ID / VPA
-                    </label>
-                    <span className="text-[11px] text-slate-400 font-medium">Optional</span>
-                  </div>
-                  <input
-                    type="text"
-                    name="vendor_upi_field"
-                    autoComplete="off"
-                    value={vendorUpiId}
-                    onChange={(e) => setVendorUpiId(e.target.value)}
-                    className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                    placeholder="e.g. yourbusiness@upi"
-                  />
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                      Create Login Password <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type={showSignupPassword ? "text" : "password"}
-                      name="vendor_pass_field"
-                      autoComplete="new-password"
-                      required
-                      minLength={6}
-                      value={vendorPassword}
-                      onChange={(e) => setVendorPassword(e.target.value)}
-                      className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                      placeholder="Min 6 characters"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                      Confirm Password <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type={showSignupPassword ? "text" : "password"}
-                      name="vendor_confirm_pass_field"
-                      autoComplete="new-password"
-                      required
-                      minLength={6}
-                      value={vendorConfirmPassword}
-                      onChange={(e) => setVendorConfirmPassword(e.target.value)}
-                      className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                      placeholder="Repeat password"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <input
-                    type="checkbox"
-                    id="showVendPass"
-                    checked={showSignupPassword}
-                    onChange={(e) => setShowSignupPassword(e.target.checked)}
-                    className="accent-purple-600 rounded"
-                  />
-                  <label htmlFor="showVendPass" className="cursor-pointer">Show password text</label>
-                </div>
-
-                {/* Upload Shop Photo */}
-                <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                    Shop Storefront Photo <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-dashed ${vendorPhotoUrl ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-purple-300 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-gray-800"} cursor-pointer text-xs font-bold text-slate-600 dark:text-gray-300 transition`}>
-                      <UploadCloud size={16} className={vendorPhotoUrl ? "text-emerald-500" : "text-purple-600"} />
-                      {uploadingPhoto ? "Uploading Photo..." : vendorPhotoUrl ? "Storefront Photo Uploaded ✓" : "Upload Storefront Photo (Required)"}
-                      <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Upload Shop Document */}
-                <div>
-                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                    Business License / FSSAI / GST Document <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-2xl border-2 border-dashed ${vendorDocUrl ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-purple-300 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-gray-800"} cursor-pointer text-xs font-bold text-slate-600 dark:text-gray-300 transition`}>
-                      <FileCheck size={16} className={vendorDocUrl ? "text-emerald-500" : "text-purple-600"} />
-                      {uploadingDoc ? "Uploading Document..." : vendorDocUrl ? "Verification Doc Uploaded ✓" : "Upload Verification Doc (PDF/Image) *"}
-                      <input type="file" accept=".pdf,image/*" onChange={handleDocUpload} className="hidden" />
-                    </label>
-                  </div>
-                </div>
-
-                {/* High Definition Interactive Live Map Location Picker */}
-                <div className="pt-2">
-                  <InteractiveLocationPicker
-                    initialLat={vendorLat}
-                    initialLng={vendorLng}
-                    initialAddress={vendorAddress}
-                    onLocationChange={({ lat, lng, address }) => {
-                      setVendorLat(lat);
-                      setVendorLng(lng);
-                      setVendorAddress(address);
-                    }}
-                    label="Storefront Physical Location (Direct Live HD Map)"
-                    required={true}
-                  />
-                </div>
-              </>
-            )}
-
-            {error && (
-              <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting || uploadingPhoto || uploadingDoc}
-              className="w-full text-white font-black py-4 rounded-2xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer text-sm bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-700 hover:from-purple-500 hover:to-indigo-500 shadow-purple-600/25 hover:shadow-purple-600/40"
-            >
-              {submitting ? (
-                <Loader2 size={18} className="animate-spin" />
+                  {signupAuthType === "password" ? (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                            Create Password <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type={showSignupPassword ? "text" : "password"}
+                            name="cust_password_field"
+                            autoComplete="new-password"
+                            required={signupAuthType === "password"}
+                            minLength={6}
+                            value={customerPassword}
+                            onChange={(e) => setCustomerPassword(e.target.value)}
+                            className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                            placeholder="Min 6 characters"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                            Confirm Password <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type={showSignupPassword ? "text" : "password"}
+                            name="cust_confirm_password_field"
+                            autoComplete="new-password"
+                            required={signupAuthType === "password"}
+                            minLength={6}
+                            value={customerConfirmPassword}
+                            onChange={(e) => setCustomerConfirmPassword(e.target.value)}
+                            className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                            placeholder="Repeat password"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <input
+                          type="checkbox"
+                          id="showCustPass"
+                          checked={showSignupPassword}
+                          onChange={(e) => setShowSignupPassword(e.target.checked)}
+                          className="accent-purple-600 rounded"
+                        />
+                        <label htmlFor="showCustPass" className="cursor-pointer">Show password text</label>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/50 rounded-2xl p-3.5 text-xs text-purple-800 dark:text-purple-300 flex items-center gap-2.5">
+                      <Zap size={18} className="text-purple-600 shrink-0" />
+                      <span>Instant 6-Digit OTP Signup: No password needed. We will send a secure 6-digit verification code to your email.</span>
+                    </div>
+                  )}
+                </>
               ) : (
-                <Zap size={18} />
-              )}
-              {roleMode === "customer" ? "Create Customer Account" : "Register Store & Complete Setup"}
-            </button>
+                <>
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                      Shop / Store Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="vendor_shop_name_field"
+                      autoComplete="off"
+                      required
+                      value={vendorShopName}
+                      onChange={(e) => setVendorShopName(e.target.value)}
+                      className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                      placeholder="Enter your store / business name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                      Store / Business Category <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: "grocery", label: "Grocery & Kirana", icon: "🛒" },
+                        { id: "hotel", label: "Hotel & Hospitality", icon: "🏨" },
+                        { id: "restaurant", label: "Restaurant & Eatery", icon: "🍽️" },
+                        { id: "bakery", label: "Bakery & Sweets", icon: "🥖" },
+                        { id: "supermarket", label: "Supermarket & Mart", icon: "🏪" },
+                        { id: "cafe", label: "Cafe & Beverage", icon: "☕" },
+                      ].map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setVendorCategory(cat.id)}
+                          className={`flex items-center gap-2 p-3 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
+                            vendorCategory === cat.id
+                              ? "border-purple-600 bg-purple-50 text-purple-800 shadow-sm ring-2 ring-purple-600/20"
+                              : "border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-700 dark:text-gray-300 hover:border-purple-300"
+                          }`}
+                        >
+                          <span className="text-base">{cat.icon}</span>
+                          <span className="truncate">{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                      Vendor Email Address
+                    </label>
+                    <input
+                      type="email"
+                      name="vendor_email_field"
+                      autoComplete="off"
+                      required
+                      value={vendorEmail}
+                      onChange={(e) => setVendorEmail(e.target.value)}
+                      className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                      placeholder="vendor@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="vendor_phone_field"
+                      autoComplete="off"
+                      required
+                      value={vendorPhone}
+                      onChange={(e) => setVendorPhone(e.target.value)}
+                      className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                      placeholder="10-digit mobile number"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400">
+                        Store UPI ID / VPA
+                      </label>
+                      <span className="text-[11px] text-slate-400 font-medium">Optional</span>
+                    </div>
+                    <input
+                      type="text"
+                      name="vendor_upi_field"
+                      autoComplete="off"
+                      value={vendorUpiId}
+                      onChange={(e) => setVendorUpiId(e.target.value)}
+                      className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                      placeholder="e.g. yourbusiness@upi"
+                    />
+                  </div>
 
-                      </form>
+                  {signupAuthType === "password" ? (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                            Create Login Password <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type={showSignupPassword ? "text" : "password"}
+                            name="vendor_pass_field"
+                            autoComplete="new-password"
+                            required={signupAuthType === "password"}
+                            minLength={6}
+                            value={vendorPassword}
+                            onChange={(e) => setVendorPassword(e.target.value)}
+                            className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                            placeholder="Min 6 characters"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                            Confirm Password <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type={showSignupPassword ? "text" : "password"}
+                            name="vendor_confirm_pass_field"
+                            autoComplete="new-password"
+                            required={signupAuthType === "password"}
+                            minLength={6}
+                            value={vendorConfirmPassword}
+                            onChange={(e) => setVendorConfirmPassword(e.target.value)}
+                            className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                            placeholder="Repeat password"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <input
+                          type="checkbox"
+                          id="showVendPass"
+                          checked={showSignupPassword}
+                          onChange={(e) => setShowSignupPassword(e.target.checked)}
+                          className="accent-purple-600 rounded"
+                        />
+                        <label htmlFor="showVendPass" className="cursor-pointer">Show password text</label>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/50 rounded-2xl p-3.5 text-xs text-purple-800 dark:text-purple-300 flex items-center gap-2.5">
+                      <Zap size={18} className="text-purple-600 shrink-0" />
+                      <span>Instant 6-Digit OTP Signup: No password needed. We will send a secure 6-digit verification code to your store email.</span>
+                    </div>
+                  )}
+
+                  {/* Upload Shop Photo */}
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                      Storefront Photo <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative border-2 border-dashed border-purple-200 dark:border-gray-700 hover:border-purple-400 rounded-2xl p-4 text-center cursor-pointer bg-white/50 dark:bg-gray-900/50">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        required={!vendorPhotoUrl}
+                        onChange={handlePhotoUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      {uploadingPhoto ? (
+                        <div className="flex items-center justify-center gap-2 text-purple-600 py-3">
+                          <Loader2 size={20} className="animate-spin" />
+                          <span className="text-xs font-bold">Uploading photo...</span>
+                        </div>
+                      ) : vendorPhotoUrl ? (
+                        <div className="flex items-center justify-center gap-2 text-emerald-600 py-2">
+                          <FileCheck size={20} />
+                          <span className="text-xs font-bold truncate max-w-[200px]">Photo Uploaded Successfully</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5 py-2">
+                          <UploadCloud size={24} className="text-purple-500" />
+                          <span className="text-xs font-bold text-slate-700 dark:text-gray-300">Click or drag shop photo here</span>
+                          <span className="text-[11px] text-slate-400">JPG, PNG, WEBP</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Upload FSSAI Document */}
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                      FSSAI / Business License Document <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative border-2 border-dashed border-purple-200 dark:border-gray-700 hover:border-purple-400 rounded-2xl p-4 text-center cursor-pointer bg-white/50 dark:bg-gray-900/50">
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        required={!vendorDocUrl}
+                        onChange={handleDocUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      {uploadingDoc ? (
+                        <div className="flex items-center justify-center gap-2 text-purple-600 py-3">
+                          <Loader2 size={20} className="animate-spin" />
+                          <span className="text-xs font-bold">Uploading document...</span>
+                        </div>
+                      ) : vendorDocUrl ? (
+                        <div className="flex items-center justify-center gap-2 text-emerald-600 py-2">
+                          <FileCheck size={20} />
+                          <span className="text-xs font-bold truncate max-w-[200px]">License Uploaded Successfully</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5 py-2">
+                          <UploadCloud size={24} className="text-purple-500" />
+                          <span className="text-xs font-bold text-slate-700 dark:text-gray-300">Click or drag license doc (PDF/Image)</span>
+                          <span className="text-[11px] text-slate-400">PDF, JPG, PNG up to 10MB</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Store Address & GPS Location */}
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                      Store Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="vendor_address_field"
+                      autoComplete="off"
+                      required
+                      value={vendorAddress}
+                      onChange={(e) => setVendorAddress(e.target.value)}
+                      className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                      placeholder="Street, Area, City, Pin code"
+                    />
+                  </div>
+
+                  {/* Interactive GPS Pin Picker */}
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                      Pin Exact Store Location on Map <span className="text-red-500">*</span>
+                    </label>
+                    <InteractiveLocationPicker
+                      initialLat={vendorLat}
+                      initialLng={vendorLng}
+                      initialAddress={vendorAddress}
+                      onLocationChange={({ lat, lng, address }: { lat: number; lng: number; address?: string }) => {
+                        setVendorLat(lat);
+                        setVendorLng(lng);
+                        if (address) setVendorAddress(address);
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Visual Step Indicator */}
+              <div className="bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/50 rounded-2xl p-3 text-xs flex items-center gap-2.5 text-purple-900 dark:text-purple-200 font-medium">
+                <ShieldCheck size={18} className="text-purple-600 shrink-0" />
+                <span>Step 1: Account Details &bull; Step 2: 6-Digit Email OTP Verification</span>
+              </div>
+
+              {error && (
+                <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting || uploadingPhoto || uploadingDoc}
+                className="w-full text-white font-black py-4 rounded-2xl transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer text-sm bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-700 hover:from-purple-500 hover:to-indigo-500 shadow-purple-600/25 hover:shadow-purple-600/40"
+              >
+                {submitting ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Zap size={18} />
+                )}
+                {roleMode === "customer"
+                  ? (signupAuthType === "otp" ? "Send 6-Digit OTP & Register" : "Continue with OTP Verification")
+                  : (signupAuthType === "otp" ? "Send Store OTP & Register" : "Register Store & Verify OTP")}
+              </button>
+            </form>
+          </div>
         )}
 
         {/* TAB: SIGN IN (PASSWORD vs 6-DIGIT OTP) */}
