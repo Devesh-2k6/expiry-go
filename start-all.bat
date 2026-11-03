@@ -27,7 +27,7 @@ echo.
 
 :: 3. Ensure Database & Admin Account Ready
 echo [1/4] Ensuring Database and Administrator Account...
-python -c "import sys; sys.path.insert(0, 'backend'); from seed_data import ensure_ecosystem_ready; ensure_ecosystem_ready()"
+python -c "import sys; sys.path.insert(0, 'backend'); from seed_data import ensure_ecosystem_ready; ensure_ecosystem_ready()" 2>nul
 echo.
 
 :: 4. Start Backend API
@@ -36,8 +36,8 @@ start "Meeva Backend API" cmd /k "title Meeva Backend API && cd backend && pytho
 echo.
 
 :: 5. Start Next.js Web App
-echo [3/4] Starting Next.js Web Server (http://localhost:3000)...
-start "Meeva Web App" cmd /k "title Meeva Web App && python serve_web.py"
+echo [3/4] Starting Web Server (http://localhost:3000)...
+start "Meeva Web App" cmd /k "title Meeva Web App && node serve_web.cjs"
 echo.
 
 :: 6. Start React Native Expo Go Mobile Server with QR Scanner
@@ -52,12 +52,12 @@ echo.
 
 :: 8. Open Browser Companion & Web App
 timeout /t 2 /nobreak >nul
-start http://localhost:3000
+start http://localhost:3000/auth
 start http://localhost:3000/mobile
 
 echo ============================================================
-echo   ✅ SUCCESS! All 4 services launched and synchronized:
-echo   • Web App:        http://localhost:3000   (LAN: http://%LAN_IP%:3000)
+echo   ✅ SUCCESS! All services launched and synchronized:
+echo   • Web App:        http://localhost:3000/auth
 echo   • Backend API:    http://localhost:8000   (Docs: http://localhost:8000/docs)
 echo   • Mobile App:     Expo Go (Scan QR in Mobile window or open exp://%LAN_IP%:8081)
 echo   • Global Tunnel:  Look at 'Meeva Global Tunnel' window for your public https://*.trycloudflare.com link!
@@ -67,8 +67,6 @@ echo   📱 HOW TO USE WEB AND APP SIMULTANEOUSLY:
 echo   1. PHONE (Expo Go): Connect to Wi-Fi (%LAN_IP%) and scan QR at http://localhost:3000/mobile.
 echo   2. PC BROWSER (Side-by-side): In the 'Meeva Mobile App' terminal, press 'w' to launch
 echo      the Mobile App at http://localhost:8081 right next to your Web App!
-echo   3. TEST REAL-TIME SYNC: Go to http://localhost:3000/mobile -> 'Live Sync Lab' tab
-echo      and click 'Run Simultaneous Sync Test' to verify instant real-time data sync!
 echo ============================================================
 echo.
 pause

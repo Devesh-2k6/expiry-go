@@ -7,9 +7,12 @@ echo ============================================================
 echo.
 
 :: 1. Auto-detect Wi-Fi / Local LAN IP
-for /f "tokens=*" %%i in ('python get_ip.py 2^>nul') do set LAN_IP=%%i
+for /f "tokens=*" %%i in ('node get_ip.cjs 2^>nul') do set LAN_IP=%%i
 if "%LAN_IP%"=="" (
-    set LAN_IP=127.0.0.1
+    for /f "tokens=*" %%i in ('python get_ip.py 2^>nul') do set LAN_IP=%%i
+)
+if "%LAN_IP%"=="" (
+    set LAN_IP=172.23.27.186
 )
 
 echo [Network Detection]
@@ -19,34 +22,30 @@ echo   • Backend API:     http://localhost:8000
 echo   • API Swagger:     http://localhost:8000/docs
 echo.
 
-:: 2. Initialize Database for Real Testing
-echo [1/3] Ensuring Backend Database Ready (Zero Accounts)...
-python -c "import sys; sys.path.insert(0, 'backend'); from seed_data import ensure_ecosystem_ready; ensure_ecosystem_ready()"
-echo.
+:: 2. Clean Ports
+node clean_ports.cjs 2>nul
 
 :: 3. Start Backend FastAPI Server
-echo [2/3] Starting FastAPI Backend Server on port 8000...
+echo [1/2] Starting FastAPI Backend Server on port 8000...
 start "Meeva Backend API (Port 8000)" cmd /k "title Meeva Backend API && cd backend && python run_server.py"
 echo.
 
-:: 4. Start Next.js Frontend Web Server
-echo [3/3] Starting Next.js Web Frontend on port 3000...
-start "Meeva Web Frontend (Port 3000)" cmd /k "title Meeva Web Frontend && npm run dev"
+:: 4. Start Web Server
+echo [2/2] Starting Web Server on port 3000...
+start "Meeva Web Frontend (Port 3000)" cmd /k "title Meeva Web Frontend && node serve_web.cjs"
 echo.
 
 :: 5. Open Web Browser
-echo Waiting for servers to initialize...
-timeout /t 3 /nobreak >nul
-start http://localhost:3000
+timeout /t 2 /nobreak >nul
+start http://localhost:3000/auth
 
 echo ============================================================
-echo   ✅ SUCCESS! Meeva Web Application is Live:
+echo   ✅ SUCCESS! Application is Live:
 echo.
-echo   🌐 Web Frontend:    http://localhost:3000
-echo   📱 Mobile Devices:  http://%LAN_IP%:3000 (same Wi-Fi)
+echo   🌐 Web Auth:        http://localhost:3000/auth
+echo   📱 Mobile Devices:  http://%LAN_IP%:3000/mobile
 echo   🔌 Backend API:     http://localhost:8000
 echo   📖 API Docs:        http://localhost:8000/docs
 echo ============================================================
 echo.
-echo Press any key to exit this launcher window (servers remain running).
-pause >nul
+pause
