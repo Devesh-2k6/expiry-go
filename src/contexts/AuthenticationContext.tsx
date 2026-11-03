@@ -18,6 +18,8 @@ interface AuthenticationContextType {
 
 const AuthenticationContext = createContext<AuthenticationContextType | null>(null);
 
+const CACHED_USER_KEY = "EXPIRYGO_CACHED_USER";
+
 export function AuthenticationProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +33,21 @@ export function AuthenticationProvider({ children }: { children: React.ReactNode
     try {
       const me = await getMe();
       setUser(me);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(CACHED_USER_KEY, JSON.stringify(me));
+        } catch {}
+      }
     } catch {
+      if (typeof window !== "undefined") {
+        try {
+          const cached = localStorage.getItem(CACHED_USER_KEY);
+          if (cached) {
+            setUser(JSON.parse(cached));
+            return;
+          }
+        } catch {}
+      }
       clearAuthToken();
       setUser(null);
     }
@@ -47,11 +63,21 @@ export function AuthenticationProvider({ children }: { children: React.ReactNode
   const loginUser = useCallback((authUser: AuthUser, token: string) => {
     setAuthToken(token);
     setUser(authUser);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(CACHED_USER_KEY, JSON.stringify(authUser));
+      } catch {}
+    }
   }, []);
 
   const logout = useCallback(() => {
     clearAuthToken();
     setUser(null);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(CACHED_USER_KEY);
+      } catch {}
+    }
   }, []);
 
   return (

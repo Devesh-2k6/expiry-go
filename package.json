@@ -19,6 +19,8 @@
     "mobile:android": "npm --prefix mobile run android",
     "mobile:ios": "npm --prefix mobile run ios",
     "mobile:web": "npm --prefix mobile run web",
+    "scanner": "start-expo-scanner.bat",
+    "mobile:scanner": "start-expo-scanner.bat",
     "build:android:apk": "build-android.bat apk",
     "build:android:aab": "build-android.bat aab",
     "build:android:clean": "build-android.bat clean"

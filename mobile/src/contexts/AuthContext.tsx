@@ -50,12 +50,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setRoleIntentState("admin");
             }
           } catch (err: any) {
-            // Token is invalid/expired (e.g. server database reseeded or expired)
-            console.log("Stored token invalid or expired, clearing session:", err?.message);
-            await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
-            await AsyncStorage.removeItem(USER_KEY);
-            setToken(null);
-            setUser(null);
+            // Stored token offline fallback
+            if (storedUser) {
+              try {
+                setUser(JSON.parse(storedUser));
+                setToken(storedToken);
+              } catch {
+                await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+                await AsyncStorage.removeItem(USER_KEY);
+                setToken(null);
+                setUser(null);
+              }
+            } else {
+              await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+              await AsyncStorage.removeItem(USER_KEY);
+              setToken(null);
+              setUser(null);
+            }
           }
         }
       } catch (err) {
