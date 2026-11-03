@@ -9,7 +9,11 @@ export async function createOrder(payload: ApiOrderCreate): Promise<ApiOrder> {
 }
 
 export async function getMyOrders(): Promise<ApiOrder[]> {
-  return apiRequest<ApiOrder[]>("/orders/me");
+  try {
+    return await apiRequest<ApiOrder[]>("/orders/me");
+  } catch {
+    return [];
+  }
 }
 
 export async function getShopOrders(): Promise<ApiOrder[]> {

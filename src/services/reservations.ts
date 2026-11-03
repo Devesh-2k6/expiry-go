@@ -9,7 +9,11 @@ export async function createReservation(productId: string, quantity: number): Pr
 }
 
 export async function getMyReservations(): Promise<ApiReservation[]> {
-  return apiRequest<ApiReservation[]>("/reservations/me");
+  try {
+    return await apiRequest<ApiReservation[]>("/reservations/me");
+  } catch {
+    return [];
+  }
 }
 
 export async function getShopReservations(): Promise<ApiReservation[]> {

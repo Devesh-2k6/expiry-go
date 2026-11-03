@@ -19,7 +19,13 @@ export function getPublicApiBaseUrl(): string {
     try {
       const override = localStorage.getItem("EXPIRYGO_API_OVERRIDE");
       if (override && override.trim()) {
-        return stripTrailingSlash(override.trim());
+        const clean = stripTrailingSlash(override.trim());
+        // Auto-clean stale temporary cloudflare tunnels
+        if (clean.includes("trycloudflare.com") || clean.includes("loca.lt")) {
+          localStorage.removeItem("EXPIRYGO_API_OVERRIDE");
+        } else {
+          return clean;
+        }
       }
     } catch {
       // Storage access blocked / SSR
