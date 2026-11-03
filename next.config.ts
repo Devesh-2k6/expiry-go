@@ -8,7 +8,6 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  output: "export",
   eslint: {
     ignoreDuringBuilds: true,
   },

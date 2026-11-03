@@ -14,16 +14,8 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
   const { json: jsonBody, body: explicitBody, headers: initHeaders, skipAuth, ...rest } = options;
 
   const base = getPublicApiBaseUrl();
-  if (!base && typeof window !== "undefined") {
-    throw new ApiError(
-      503,
-      null,
-      "Backend server is not configured. Please click the Backend Settings button to set your live API URL."
-    );
-  }
-
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const url = `${base}${normalizedPath}`;
+  const url = base ? `${base}${normalizedPath}` : normalizedPath;
 
   const headers = new Headers(initHeaders);
   if (!headers.has("Accept")) {
@@ -74,7 +66,9 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     if (err.name === "AbortError") {
       errorMsg = "Server request timed out. Please try again.";
     } else if (err.message === "Failed to fetch" || err.name === "TypeError") {
-      errorMsg = `Cannot reach backend API at ${base || "not set"}. Please verify your backend server is running or configure your API URL.`;
+      errorMsg = base
+        ? `Cannot reach backend API at ${base}. Please verify your server is running.`
+        : "Failed to connect to server. Please check your internet connection.";
     }
     throw new ApiError(503, null, errorMsg);
   }

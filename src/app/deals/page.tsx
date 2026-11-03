@@ -1314,8 +1314,7 @@ export default function CustomerDealsPage() {
               {errorMessage ?? getErrorMessage(new Error("Failed to load deals"))}
             </p>
             <p className="text-xs text-gray-500 mb-4">
-              Make sure the API is running:{" "}
-              <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">uvicorn main:app --port 8000</code>
+              Please check your connection and tap try again.
             </p>
             <button
               type="button"

@@ -342,14 +342,7 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
         text: `6-digit verification code sent to ${idToSend}. Code: ${code}`,
       });
     } catch (err: any) {
-      setOtpIdentifier(idToSend);
-      setOtpCooldown(60);
-      setOtpCode("123456");
-      setTab("otp");
-      setOtpStatusMsg({
-        type: "success",
-        text: `Demo verification code: 123456 (pre-filled). Tap verify to sign in!`,
-      });
+      setError(err?.message || "Failed to dispatch OTP code. Please check your network and backend connection.");
     } finally {
       setSendingOtp(false);
     }
@@ -375,24 +368,6 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
       });
       await loginWithSession(res, isVendorMode ? "shop" : "customer");
     } catch (err: any) {
-      if (
-        otpCode.trim() === "123456" ||
-        (err?.message && (err.message.includes("Network") || err.message.includes("fetch") || err.message.includes("Failed")))
-      ) {
-        const isVendorMode = roleMode === "vendor";
-        await loginWithSession({
-          access_token: "offline-otp-token-" + Date.now(),
-          user: {
-            id: "user-" + Date.now(),
-            email: otpIdentifier.trim().toLowerCase() || "demo@example.com",
-            name: (isVendorMode ? vendorShopName : customerName).trim() || (isVendorMode ? "Demo Store" : "Demo Customer"),
-            role: isVendorMode ? "VENDOR" : "CUSTOMER",
-            is_shop_owner: isVendorMode,
-            email_verified: true,
-          },
-        }, isVendorMode ? "shop" : "customer");
-        return;
-      }
       setError(err?.message || "Invalid or expired verification code.");
     } finally {
       setVerifyingOtpLoading(false);

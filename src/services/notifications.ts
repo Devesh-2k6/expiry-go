@@ -2,7 +2,12 @@ import { apiRequest } from "@/api/client";
 import type { ApiNotification } from "@/types/product";
 
 export async function getMyNotifications(): Promise<ApiNotification[]> {
-  return apiRequest<ApiNotification[]>("/notifications");
+  try {
+    const res = await apiRequest<ApiNotification[]>("/notifications");
+    return Array.isArray(res) ? res : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function markAllNotificationsAsRead(): Promise<{ message: string }> {

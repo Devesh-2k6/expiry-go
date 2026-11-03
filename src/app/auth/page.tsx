@@ -508,7 +508,7 @@ export default function AuthPage() {
         setOtpIdentifier(targetEmail);
         setOtpSourceTab("login");
         setTab("otp");
-        setOtpCode("123456");
+        setOtpCode("");
         setOtpStatusMsg({
           type: "success",
           text: errMsg,
