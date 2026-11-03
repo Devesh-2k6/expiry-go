@@ -1,0 +1,22 @@
+@echo off
+setlocal enabledelayedexpansion
+title Meeva - Expo Go Tunnel Launcher
+echo ============================================================
+echo   🚀 MEEVA - EXPO GO TUNNEL LAUNCHER (WORLDWIDE ACCESS)
+echo ============================================================
+echo.
+echo   This mode uses a secure tunnel so your phone can connect
+echo   from ANY network (Wi-Fi, Mobile Data 4G/5G, or Hotspot)
+echo   even if Windows Firewall or Router blocks local Wi-Fi.
+echo.
+echo ============================================================
+echo.
+
+:: Clean Port 8081
+node clean_ports.cjs 2>nul
+
+cd mobile
+echo Starting Expo Go with Tunnel...
+npx expo start --go --tunnel -c
+pause
+
