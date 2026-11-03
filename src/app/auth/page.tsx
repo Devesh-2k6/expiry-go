@@ -285,21 +285,7 @@ export default function AuthPage() {
         router.replace("/deals");
       }
     } catch (err: unknown) {
-      // Offline fallback
-      const cleanEmail = emailToUse.trim().toLowerCase();
-      const role = roleToSet === "vendor" ? "VENDOR" : roleToSet === "admin" ? "ADMIN" : "CUSTOMER";
-      const fallbackUser: AuthUser = {
-        id: "quick-" + Date.now(),
-        email: cleanEmail,
-        name: roleToSet === "vendor" ? "Demo Store Owner" : roleToSet === "admin" ? "Demo Administrator" : "Demo Customer",
-        role: role,
-        is_shop_owner: role === "VENDOR",
-        email_verified: true,
-      };
-      loginUser(fallbackUser, "offline-quick-token-" + Date.now());
-      if (role === "ADMIN") router.replace("/admin");
-      else if (role === "VENDOR") router.replace("/shop");
-      else router.replace("/deals");
+      setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -309,7 +295,7 @@ export default function AuthPage() {
   const handleSendOtp = async (targetId?: string) => {
     const idToSend = (targetId || otpIdentifier || loginEmail).trim();
     if (!idToSend) {
-      setError("Please enter your email address to receive a login OTP code.");
+      setError("Please enter your email address to receive an OTP code.");
       return;
     }
     setError("");
@@ -317,27 +303,18 @@ export default function AuthPage() {
     setOtpStatusMsg(null);
     setOtpCode("");
     try {
-      const res = await sendOtp(idToSend);
+      await sendOtp(idToSend);
       setOtpIdentifier(idToSend);
       setOtpSent(true);
       setOtpCooldown(60);
       setTab("otp");
-      const devCode = (res as any)?.dev_code || "123456";
-      setOtpCode(devCode);
+      setOtpCode("");
       setOtpStatusMsg({
         type: "success",
-        text: `6-digit verification code sent to ${idToSend}. Universal code: ${devCode}`,
+        text: `6-digit verification code sent to ${idToSend}.`,
       });
     } catch (err: unknown) {
-      setOtpIdentifier(idToSend);
-      setOtpSent(true);
-      setOtpCooldown(60);
-      setOtpCode("123456");
-      setTab("otp");
-      setOtpStatusMsg({
-        type: "success",
-        text: `Verification code sent to ${idToSend}. Demo code: 123456 (pre-filled)`,
-      });
+      setError(getErrorMessage(err));
     } finally {
       setSendingOtp(false);
     }
@@ -380,21 +357,8 @@ export default function AuthPage() {
       } else {
         router.replace("/deals");
       }
-    } catch {
-      // Offline fallback: allow verification and log in
-      const isVendorMode = roleMode === "vendor";
-      const cleanEmail = otpIdentifier.trim().toLowerCase() || "demo@example.com";
-      const fallbackUser: AuthUser = {
-        id: "otp-user-" + Date.now(),
-        email: cleanEmail,
-        name: (isVendorMode ? vendorShopName : customerName).trim() || (isVendorMode ? "Demo Store" : "Demo Customer"),
-        role: isVendorMode ? "VENDOR" : "CUSTOMER",
-        is_shop_owner: isVendorMode,
-        email_verified: true,
-      };
-      loginUser(fallbackUser, "offline-otp-token-" + Date.now());
-      if (isVendorMode) router.replace("/shop");
-      else router.replace("/deals");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setVerifyingOtpLoading(false);
     }
@@ -427,39 +391,19 @@ export default function AuthPage() {
             password: customerPassword.trim() || undefined,
           });
 
-          if (customerPassword && customerPassword.trim()) {
-            try {
-              const res = await login({ email: cleanEmail, password: customerPassword.trim() });
-              loginUser(res.user, res.access_token);
-              router.replace("/deals");
-              return;
-            } catch {
-              // fallback to OTP if direct login fails
-            }
-          }
+          // Mandatory OTP verification step
           setOtpIdentifier(cleanEmail);
           setOtpSourceTab("signup");
           setOtpSent(true);
           setOtpCooldown(60);
-          setOtpCode("123456");
+          setOtpCode("");
           setTab("otp");
           setOtpStatusMsg({
             type: "success",
-            text: `6-digit verification code sent to ${cleanEmail}. Universal code: 123456`,
+            text: `6-digit verification code sent to ${cleanEmail}. Please enter the code from your email to activate your account.`,
           });
         } catch (apiErr: any) {
-          // Offline / Vercel fallback
-          const fallbackUser: AuthUser = {
-            id: "cust-" + Date.now(),
-            email: cleanEmail,
-            name: customerName.trim() || "Customer",
-            role: "CUSTOMER",
-            is_shop_owner: false,
-            email_verified: true,
-          };
-          loginUser(fallbackUser, "offline-demo-token-" + Date.now());
-          router.replace("/deals");
-          return;
+          setError(getErrorMessage(apiErr));
         }
       } else {
         // Vendor Signup
@@ -490,38 +434,19 @@ export default function AuthPage() {
             longitude: vendorLng,
           });
 
-          if (vendorPassword && vendorPassword.trim()) {
-            try {
-              const res = await login({ email: cleanEmail, password: vendorPassword.trim() });
-              loginUser(res.user, res.access_token);
-              router.replace("/shop");
-              return;
-            } catch {
-              // fallback
-            }
-          }
+          // Mandatory OTP verification step
           setOtpIdentifier(cleanEmail);
           setOtpSourceTab("signup");
           setOtpSent(true);
           setOtpCooldown(60);
-          setOtpCode("123456");
+          setOtpCode("");
           setTab("otp");
           setOtpStatusMsg({
             type: "success",
-            text: `Shop registered! Verification code sent to ${cleanEmail}. Universal code: 123456`,
+            text: `Shop registered! 6-digit verification code sent to ${cleanEmail}. Please enter the code to activate your shop.`,
           });
         } catch (apiErr: any) {
-          const fallbackVendor: AuthUser = {
-            id: "vendor-" + Date.now(),
-            email: cleanEmail,
-            name: vendorShopName.trim() || "Store Partner",
-            role: "VENDOR",
-            is_shop_owner: true,
-            email_verified: true,
-          };
-          loginUser(fallbackVendor, "offline-demo-token-" + Date.now());
-          router.replace("/shop");
-          return;
+          setError(getErrorMessage(apiErr));
         }
       }
     } catch (err: unknown) {
@@ -584,21 +509,7 @@ export default function AuthPage() {
           text: errMsg,
         });
       } else {
-        // Any connection error / offline backend on Vercel automatically signs in
-        const cleanEmail = loginEmail.trim().toLowerCase();
-        const role = roleMode === "vendor" ? "VENDOR" : roleMode === "admin" ? "ADMIN" : "CUSTOMER";
-        const fallbackUser: AuthUser = {
-          id: "user-" + Date.now(),
-          email: cleanEmail || `${roleMode}@example.com`,
-          name: cleanEmail ? cleanEmail.split("@")[0] : (roleMode === "vendor" ? "Demo Store" : "Demo Customer"),
-          role: role,
-          is_shop_owner: role === "VENDOR",
-          email_verified: true,
-        };
-        loginUser(fallbackUser, "offline-demo-token-" + Date.now());
-        if (role === "ADMIN") router.replace("/admin");
-        else if (role === "VENDOR") router.replace("/shop");
-        else router.replace("/deals");
+        setError(errMsg);
       }
     } finally {
       setSubmitting(false);

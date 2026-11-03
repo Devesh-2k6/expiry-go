@@ -308,7 +308,7 @@ def customer_register(body: schemas.CustomerRegisterRequest, db: Annotated[Sessi
             name=clean_name,
             role="CUSTOMER",
             is_shop_owner=False,
-            email_verified=True,
+            email_verified=False,
         )
         db.add(user)
         db.commit()
@@ -1044,16 +1044,15 @@ def login(body: schemas.LoginRequest, db: Annotated[Session, Depends(get_db)]):
         db.commit()
         db.refresh(user)
 
-    # Verification enforcement: ONLY for Vendor accounts (Customers have instant access)
-    is_vendor = (user.role == "VENDOR" or getattr(user, "is_shop_owner", False))
-    if is_vendor and not getattr(user, "email_verified", False):
+    # Verification enforcement: Require email verification for all accounts
+    if not getattr(user, "email_verified", False):
         try:
             send_otp_to_identifier(user.email, name=user.name)
         except Exception:
             pass
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Vendor account requires email verification. We have dispatched a 6-digit verification code to your email."
+            detail="Account requires email verification. We have dispatched a 6-digit verification code to your email."
         )
 
     token = create_access_token(user.id, role=getattr(user, "role", "CUSTOMER"))
