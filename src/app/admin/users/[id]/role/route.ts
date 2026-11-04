@@ -24,3 +24,4 @@ export async function PATCH(
     return NextResponse.json({ detail: err.message || "Failed to update user role" }, { status: 500 });
   }
 }
+

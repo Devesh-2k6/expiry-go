@@ -20,3 +20,4 @@ export async function GET() {
     return NextResponse.json({ detail: err.message || "Failed to fetch pending shops" }, { status: 500 });
   }
 }
+

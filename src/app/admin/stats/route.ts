@@ -30,3 +30,4 @@ export async function GET() {
     return NextResponse.json({ detail: err.message || "Failed to fetch admin stats" }, { status: 500 });
   }
 }
+

@@ -26,3 +26,4 @@ export async function PATCH(
     return NextResponse.json({ detail: err.message || "Failed to update location" }, { status: 500 });
   }
 }
+

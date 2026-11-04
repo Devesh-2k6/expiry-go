@@ -21,3 +21,4 @@ export async function POST(
     return NextResponse.json({ detail: err.message || "Failed to reverify location" }, { status: 500 });
   }
 }
+

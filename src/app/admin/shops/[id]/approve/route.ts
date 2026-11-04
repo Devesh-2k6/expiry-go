@@ -31,3 +31,4 @@ export async function POST(
     return NextResponse.json({ detail: err.message || "Failed to approve shop" }, { status: 500 });
   }
 }
+

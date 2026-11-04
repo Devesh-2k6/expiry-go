@@ -29,3 +29,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to fetch shops" }, { status: 500 });
   }
 }
+

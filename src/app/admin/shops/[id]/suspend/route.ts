@@ -21,3 +21,4 @@ export async function POST(
     return NextResponse.json({ detail: err.message || "Failed to suspend shop" }, { status: 500 });
   }
 }
+
