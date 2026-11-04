@@ -254,7 +254,7 @@ export default function PantryPage() {
               <div>
                 <h4 className="text-base font-bold text-slate-200">Your Digital Fridge is Empty</h4>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
-                  Items you reserve on Meeva or add manually will automatically track their expiration countdowns here.
+                  Items you reserve on ExpiryGo or add manually will automatically track their expiration countdowns here.
                 </p>
               </div>
               <button

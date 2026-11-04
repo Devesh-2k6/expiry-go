@@ -137,10 +137,10 @@ export default function SustainabilityPage() {
           <section className="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-3">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              2. How Meeva Resolves the Problem
+              2. How ExpiryGo Resolves the Problem
             </h2>
             <p>
-              By combining AI-driven dynamic markdown optimization with real-time GPS deal discovery, Meeva matches short-dated inventory with local consumers before expiry occurs. This creates a triple-win ecosystem:
+              By combining AI-driven dynamic markdown optimization with real-time GPS deal discovery, ExpiryGo matches short-dated inventory with local consumers before expiry occurs. This creates a triple-win ecosystem:
             </p>
             <ul className="list-disc list-inside space-y-1.5 text-zinc-400 pl-2">
               <li><strong className="text-zinc-200">For Consumers:</strong> 50% to 70% savings on top-quality daily groceries and artisan bakery goods.</li>
@@ -161,7 +161,7 @@ export default function SustainabilityPage() {
         </div>
 
         <div className="pt-8 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
-          <p>&copy; {new Date().getFullYear()} Meeva Technologies Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} ExpiryGo Technologies Inc. All rights reserved.</p>
           <Link href="/deals" className="text-emerald-400 hover:underline">
             Browse Active Food Rescue Deals &rarr;
           </Link>

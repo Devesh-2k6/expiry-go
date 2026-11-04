@@ -279,7 +279,7 @@ export default function InteractiveMapPicker({
           {
             headers: {
               "Accept-Language": "en",
-              "User-Agent": "Meeva-Delivery/1.0",
+              "User-Agent": "ExpiryGo-Delivery/1.0",
             },
           }
         );
@@ -319,7 +319,7 @@ export default function InteractiveMapPicker({
         {
           headers: {
             "Accept-Language": "en",
-            "User-Agent": "Meeva-Delivery/1.0",
+            "User-Agent": "ExpiryGo-Delivery/1.0",
           },
         }
       );

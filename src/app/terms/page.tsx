@@ -50,7 +50,7 @@ export default function TermsOfServicePage() {
               1. Platform Nature & Surplus Food Mission
             </h2>
             <p>
-              Meeva acts as a hyper-local technology platform connecting conscious consumers with verified neighbourhood supermarkets, bakeries, and food grocers offering discounted near-expiry or surplus inventory. Meeva facilitates reservations and real-time inventory discovery.
+              ExpiryGo acts as a hyper-local technology platform connecting conscious consumers with verified neighbourhood supermarkets, bakeries, and food grocers offering discounted near-expiry or surplus inventory. ExpiryGo facilitates reservations and real-time inventory discovery.
             </p>
           </section>
 
@@ -96,7 +96,7 @@ export default function TermsOfServicePage() {
         </div>
 
         <div className="pt-8 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
-          <p>&copy; {new Date().getFullYear()} Meeva Technologies Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} ExpiryGo Technologies Inc. All rights reserved.</p>
           <Link href="/sustainability" className="text-purple-400 hover:underline">
             View Sustainability Disclosure &rarr;
           </Link>

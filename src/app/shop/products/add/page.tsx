@@ -434,7 +434,7 @@ export default function AddProductPage() {
           ctxF.fill();
           ctxF.fillStyle = "#F8FAFC";
           ctxF.font = "bold 15px sans-serif";
-          ctxF.fillText(preset.mode === "GROCERY" ? "🛒 MEEVA INSTAMART" : "🍽️ MEEVA FOOD", 55, 65);
+          ctxF.fillText(preset.mode === "GROCERY" ? "🛒 EXPIRYGO MART" : "🍽️ EXPIRYGO FOOD", 55, 65);
 
           // Verified tag
           ctxF.fillStyle = "rgba(16, 185, 129, 0.25)";
@@ -511,7 +511,7 @@ export default function AddProductPage() {
 
           ctxE.fillStyle = "#64748B";
           ctxE.font = "bold 16px monospace";
-          ctxE.fillText("MEEVA QUALITY ASSURANCE & DATE STAMP", 40, 70);
+          ctxE.fillText("EXPIRYGO QUALITY ASSURANCE & DATE STAMP", 40, 70);
 
           ctxE.fillStyle = "#E2E8F0";
           ctxE.font = "bold 24px sans-serif";

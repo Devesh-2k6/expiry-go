@@ -545,7 +545,7 @@ export async function sendSmtpOtp(email: string, code: string, name?: string): P
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; padding: 24px; color: #0f172a;">
   <div style="max-width: 500px; margin: auto; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
     <div style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 28px; text-align: center; color: #ffffff;">
-      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">🌱 Meeva / ExpiryGo</h1>
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">🌱 ExpiryGo</h1>
       <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.9;">Secure Account Verification</p>
     </div>
     <div style="padding: 28px;">
@@ -557,16 +557,16 @@ export async function sendSmtpOtp(email: string, code: string, name?: string): P
       <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">This code is valid for 15 minutes and is single-use only. Never share this code with anyone.</p>
     </div>
     <div style="background: #f1f5f9; padding: 14px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
-      &copy; Meeva Surplus Marketplace. All rights reserved.
+      &copy; ExpiryGo Surplus Marketplace. All rights reserved.
     </div>
   </div>
 </body>
 </html>`;
 
     await transporter.sendMail({
-      from: `"Meeva" <${user}>`,
+      from: `"ExpiryGo" <${user}>`,
       to: email,
-      subject: `🔐 Your Meeva Verification Code: ${code}`,
+      subject: `🔐 Your ExpiryGo Verification Code: ${code}`,
       text: `Your verification code is: ${code}. Valid for 15 minutes.`,
       html,
     });

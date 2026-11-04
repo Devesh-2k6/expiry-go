@@ -273,7 +273,7 @@ export function GoogleSignInButton({
                   Sign in with your Google Account
                 </h2>
                 <p className="text-xs text-[#9aa0a6] mt-1">
-                  to continue to <span className="font-semibold text-[#8ab4f8]">Meeva</span>
+                  to continue to <span className="font-semibold text-[#8ab4f8]">ExpiryGo</span>
                 </p>
               </div>
 
@@ -346,7 +346,7 @@ export function GoogleSignInButton({
 
               {/* Bottom Policy Notice */}
               <div className="px-6 py-3.5 border-t border-[#3c4043] bg-[#1a1b1e] text-[11px] text-[#9aa0a6] leading-relaxed">
-                Before using this app, you can review Meeva&apos;s{" "}
+                Before using this app, you can review ExpiryGo&apos;s{" "}
                 <span className="text-[#8ab4f8]">Privacy Policy</span> and{" "}
                 <span className="text-[#8ab4f8]">Terms of Service</span>.
               </div>

@@ -786,7 +786,7 @@ export default function CustomerDealsPage() {
                   <ShoppingBag size={15} />
                 </div>
                 <div className="text-left min-w-0">
-                  <span className="block leading-tight font-black text-xs truncate">Meeva Instamart</span>
+                  <span className="block leading-tight font-black text-xs truncate">ExpiryGo Mart</span>
                   <span className="text-[10px] opacity-70 block font-medium truncate">Kirana & Groceries</span>
                 </div>
               </button>
@@ -807,7 +807,7 @@ export default function CustomerDealsPage() {
                   <Utensils size={15} />
                 </div>
                 <div className="text-left min-w-0">
-                  <span className="block leading-tight font-black text-xs truncate">Meeva Food</span>
+                  <span className="block leading-tight font-black text-xs truncate">ExpiryGo Food</span>
                   <span className="text-[10px] opacity-70 block font-medium truncate">Hotels & Restaurants</span>
                 </div>
               </button>
@@ -1893,7 +1893,7 @@ export default function CustomerDealsPage() {
                     </p>
                     <div className="bg-white p-3.5 rounded-2xl inline-block shadow-md border border-gray-200">
                       <QRCodeSVG
-                        value={`upi://pay?pa=${encodeURIComponent(selectedProductForOrder.shop?.upi_id || "expirygo.deals@okhdfcbank")}&pn=${encodeURIComponent(selectedProductForOrder.shop?.name || "Merchant")}&am=${(createdDeliveryOrder.total_price + createdDeliveryOrder.delivery_fee).toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Meeva Order ${createdDeliveryOrder.id.slice(0, 8)}`)}`}
+                        value={`upi://pay?pa=${encodeURIComponent(selectedProductForOrder.shop?.upi_id || "expirygo.deals@okhdfcbank")}&pn=${encodeURIComponent(selectedProductForOrder.shop?.name || "Merchant")}&am=${(createdDeliveryOrder.total_price + createdDeliveryOrder.delivery_fee).toFixed(2)}&cu=INR&tn=${encodeURIComponent(`ExpiryGo Order ${createdDeliveryOrder.id.slice(0, 8)}`)}`}
                         size={140}
                         level="M"
                         includeMargin={false}
@@ -1904,7 +1904,7 @@ export default function CustomerDealsPage() {
 
                   {/* Quick App Link */}
                   <a
-                    href={`upi://pay?pa=${encodeURIComponent(selectedProductForOrder.shop?.upi_id || "expirygo.deals@okhdfcbank")}&pn=${encodeURIComponent(selectedProductForOrder.shop?.name || "Merchant")}&am=${(createdDeliveryOrder.total_price + createdDeliveryOrder.delivery_fee).toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Meeva Order ${createdDeliveryOrder.id.slice(0, 8)}`)}`}
+                    href={`upi://pay?pa=${encodeURIComponent(selectedProductForOrder.shop?.upi_id || "expirygo.deals@okhdfcbank")}&pn=${encodeURIComponent(selectedProductForOrder.shop?.name || "Merchant")}&am=${(createdDeliveryOrder.total_price + createdDeliveryOrder.delivery_fee).toFixed(2)}&cu=INR&tn=${encodeURIComponent(`ExpiryGo Order ${createdDeliveryOrder.id.slice(0, 8)}`)}`}
                     className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
                   >
                     <ExternalLink size={14} /> Open Installed UPI App

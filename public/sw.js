@@ -1,4 +1,4 @@
-// Meeva Web Push Service Worker
+// ExpiryGo Web Push Service Worker
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
@@ -8,7 +8,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let data = { title: "Meeva Surplus Alert", body: "A new fresh surplus deal just dropped nearby!", url: "/deals" };
+  let data = { title: "ExpiryGo Surplus Alert", body: "A new fresh surplus deal just dropped nearby!", url: "/deals" };
   try {
     if (event.data) {
       data = { ...data, ...event.data.json() };

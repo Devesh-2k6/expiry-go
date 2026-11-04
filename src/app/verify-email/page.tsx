@@ -198,7 +198,7 @@ function VerifyEmailContent() {
                 Verifying Your Email
               </h2>
               <p className="text-sm text-slate-500 dark:text-gray-400 font-medium">
-                Validating your cryptographic security token with Meeva servers...
+                Validating your cryptographic security token with ExpiryGo servers...
               </p>
             </div>
           </div>
@@ -329,7 +329,7 @@ function VerifyEmailContent() {
                 Already Verified!
               </h2>
               <p className="text-sm text-slate-600 dark:text-gray-300 font-medium">
-                Your email address is already verified and your account is in good standing. You can proceed directly to Meeva.
+                Your email address is already verified and your account is in good standing. You can proceed directly to ExpiryGo.
               </p>
             </div>
 

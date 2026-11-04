@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy & Data Ethics
           </h1>
           <p className="text-sm text-zinc-400 mt-2">
-            Last updated: September 2026. Effective globally for all Meeva shoppers, merchants, and partners.
+            Last updated: September 2026. Effective globally for all ExpiryGo shoppers, merchants, and partners.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default function PrivacyPolicyPage() {
               1. Information We Collect
             </h2>
             <p>
-              Meeva collects minimal personal data required to enable seamless hyper-local surplus food rescue. This includes:
+              ExpiryGo collects minimal personal data required to enable seamless hyper-local surplus food rescue. This includes:
             </p>
             <ul className="list-disc list-inside space-y-1.5 text-zinc-400 pl-2">
               <li><strong className="text-zinc-200">Account Credentials:</strong> Name, verified email address, phone number (for OTP verification), and encrypted authentication tokens.</li>
@@ -81,7 +81,7 @@ export default function PrivacyPolicyPage() {
               3. Zero Data Brokering Guarantee
             </h2>
             <p>
-              Meeva operates under a strict Zero-Ad-Tracker, Zero-Data-Brokering mandate. We never sell, rent, or trade your personal data, shopping habits, or location history to third-party advertisers.
+              ExpiryGo operates under a strict Zero-Ad-Tracker, Zero-Data-Brokering mandate. We never sell, rent, or trade your personal data, shopping habits, or location history to third-party advertisers.
             </p>
           </section>
 
@@ -97,7 +97,7 @@ export default function PrivacyPolicyPage() {
         </div>
 
         <div className="pt-8 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
-          <p>&copy; {new Date().getFullYear()} Meeva Technologies Inc. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} ExpiryGo Technologies Inc. All rights reserved.</p>
           <Link href="/terms" className="text-purple-400 hover:underline">
             View Terms of Service &rarr;
           </Link>

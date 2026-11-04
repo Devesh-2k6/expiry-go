@@ -58,10 +58,10 @@ export function ShopperLayout({ children }: ShopperLayoutProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-lg font-black tracking-tight text-zinc-900 dark:text-white">
-                Meeva
+                ExpiryGo
               </span>
               <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 border border-purple-200/60 dark:border-purple-800/40 px-1.5 py-0.5 rounded-md">
-                Food
+                Deals
               </span>
             </div>
           </Link>

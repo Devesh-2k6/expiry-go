@@ -204,7 +204,7 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
     setProcessingStep("Contacting bank gateway...");
     await new Promise((r) => setTimeout(r, 800));
 
-    setProcessingStep("Finalizing Meeva reservation...");
+    setProcessingStep("Finalizing ExpiryGo reservation...");
     await new Promise((r) => setTimeout(r, 600));
 
     try {
@@ -239,8 +239,8 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
 
   const shopName = reservation.product.shop?.name || "Local Partner Store";
   const shopAddress = reservation.product.shop?.address || "Store Counter";
-  const shopUpi = reservation.product.shop?.upi_id || "meevareward.pay@upi";
-  const upiPayUrl = `upi://pay?pa=${encodeURIComponent(shopUpi)}&pn=${encodeURIComponent(shopName)}&am=${reservation.total_price.toFixed(2)}&cu=INR&tn=Meeva%20Surplus%20Rescue`;
+  const shopUpi = reservation.product.shop?.upi_id || "expirygo.pay@upi";
+  const upiPayUrl = `upi://pay?pa=${encodeURIComponent(shopUpi)}&pn=${encodeURIComponent(shopName)}&am=${reservation.total_price.toFixed(2)}&cu=INR&tn=ExpiryGo%20Surplus%20Rescue`;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
@@ -596,7 +596,7 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
               {/* Security Badge */}
               <div className="flex items-center gap-2 justify-center py-1 text-[10px] text-gray-400 font-bold uppercase tracking-wider border-t border-gray-100 dark:border-gray-800 pt-3">
                 <ShieldCheck size={14} className="text-emerald-500" />
-                <span>Verified Meeva Surplus Handover Protection</span>
+                <span>Verified ExpiryGo Surplus Handover Protection</span>
               </div>
             </div>
           </div>

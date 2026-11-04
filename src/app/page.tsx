@@ -490,7 +490,7 @@ export default function Home() {
       <section className="max-w-7xl 2xl:max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10 border-t border-purple-100">
         <div className="mb-10 text-center md:text-left">
           <span className="text-xs font-black text-purple-600 uppercase tracking-widest mb-1 block">Platform Pillars</span>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">How Meeva Works</h2>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">How ExpiryGo Works</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -620,11 +620,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── WHY MEEVA SECTION ── */}
+      {/* ── WHY EXPIRYGO SECTION ── */}
       <section className="max-w-7xl 2xl:max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-28 relative z-10">
         <div className="mb-12">
           <span className="text-xs sm:text-sm font-black text-purple-600 tracking-widest uppercase mb-2 block">
-            Why Choose Meeva
+            Why Choose ExpiryGo
           </span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900">
             Built for Smart Consumers & Local Merchants
@@ -754,7 +754,7 @@ export default function Home() {
           </div>
 
           <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-            <p>&copy; {new Date().getFullYear()} Meeva Technologies Inc. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} ExpiryGo Technologies Inc. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/privacy" className="hover:text-slate-300 transition">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-slate-300 transition">Terms of Service</Link>

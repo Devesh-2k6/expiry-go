@@ -18,7 +18,7 @@ export const SUPPORTED_LANGUAGES: LanguageMeta[] = [
 export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
   en: {
     // Brand & Hero
-    "brand.name": "Meeva",
+    "brand.name": "ExpiryGo",
     "brand.tagline": "Grab it before it's gone",
     "brand.subtitle": "Save money, fight food waste, shop smarter with real-time near-expiry surplus deals.",
     
@@ -109,7 +109,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
   },
   hi: {
     // Brand & Hero
-    "brand.name": "Meeva",
+    "brand.name": "ExpiryGo",
     "brand.tagline": "खत्म होने से पहले बचाएं",
     "brand.subtitle": "पैसे बचाएं, भोजन की बर्बादी रोकें और पास की दुकानों से 70% तक की छूट पर ताज़ा भोजन पाएं।",
     
@@ -200,7 +200,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
   },
   ta: {
     // Brand & Hero
-    "brand.name": "Meeva",
+    "brand.name": "ExpiryGo",
     "brand.tagline": "முடிவதற்குள் பெற்றுக் கொள்ளுங்கள்",
     "brand.subtitle": "உணவு வீணாவதைத் தடுத்து, உள்ளூர் கடைகளில் 70% வரை தள்ளுபடியில் தரமான உணவை வாங்குங்கள்.",
     
@@ -291,7 +291,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
   },
   te: {
     // Brand & Hero
-    "brand.name": "Meeva",
+    "brand.name": "ExpiryGo",
     "brand.tagline": "ముగిసేలోపే పొందండి",
     "brand.subtitle": "ఆహార వృధాను అరికట్టండి, స్థానిక దుకాణాల నుండి 70% వరకు తగ్గింపుతో తాజా ఆహారాన్ని ఆదా చేసుకోండి.",
     
@@ -382,7 +382,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
   },
   kn: {
     // Brand & Hero
-    "brand.name": "Meeva",
+    "brand.name": "ExpiryGo",
     "brand.tagline": "ಮುಗಿಯುವ ಮುನ್ನ ಪಡೆದುಕೊಳ್ಳಿ",
     "brand.subtitle": "ಆಹಾರ ವ್ಯರ್ಥವಾಗುವುದನ್ನು ತಡೆಯಿರಿ, ಸ್ಥಳೀಯ ಅಂಗಡಿಗಳಿಂದ 70% ವರೆಗಿನ ರಿಯಾಯಿತಿಯಲ್ಲಿ ಉಳಿಸಿ.",
     

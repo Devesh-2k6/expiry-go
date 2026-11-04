@@ -16,11 +16,11 @@ import { RouteProgressBar } from "@/components/ui/RouteProgressBar";
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Meeva | Surplus Food & Grocery Rescue",
+  title: "ExpiryGo | Surplus Food & Grocery Rescue",
   description: "Rescue surplus near-expiry products from local shops at up to 70% off. Save money, fight food waste, shop smarter.",
   keywords: ["deals", "local shops", "food waste", "discounts", "near-expiry", "surplus"],
   openGraph: {
-    title: "Meeva | Surplus Food & Grocery Rescue",
+    title: "ExpiryGo | Surplus Food & Grocery Rescue",
     description: "Near-expiry products from local shops at up to 70% off.",
     type: "website",
   }
