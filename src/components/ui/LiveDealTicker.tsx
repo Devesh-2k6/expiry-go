@@ -19,7 +19,7 @@ export function LiveDealTicker() {
 
   useEffect(() => {
     if (lastDeal) {
-      setMessage(`🔥 LIVE DROP: ${lastDeal.name} just listed for ₹${(lastDeal.current_price ?? lastDeal.discount_price).toFixed(0)}!`);
+      setMessage(`🔥 LIVE DROP: ${lastDeal.name} just listed for ₹${Number(lastDeal.current_price ?? lastDeal.discount_price ?? 0).toFixed(0)}!`);
     }
   }, [lastDeal]);
 

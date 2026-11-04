@@ -58,7 +58,7 @@ export function LiveDealToast() {
               <div className="flex-1 pr-6">
                 <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-1">Live Drop!</p>
                 <h4 className="text-white font-bold text-sm mb-1 line-clamp-1">{deal.shop?.name || "A local shop"} just posted:</h4>
-                <p className="text-purple-100/90 text-sm font-medium mb-3 line-clamp-1">{deal.name} at ₹{(deal.current_price ?? deal.discount_price).toFixed(2)}</p>
+                <p className="text-purple-100/90 text-sm font-medium mb-3 line-clamp-1">{deal.name} at ₹{Number(deal.current_price ?? deal.discount_price ?? 0).toFixed(2)}</p>
                 <button 
                   onClick={handleNavigateToDeals} 
                   className="text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-md shadow-purple-600/30"

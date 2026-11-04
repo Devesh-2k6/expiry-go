@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthenticationContext";
 import { getErrorMessage } from "@/api/errors";
-import { getProducts, updateProduct, uploadImage, optimizeProductDetails, scanProductDates } from "@/services/products";
+import { getProductById, getProducts, updateProduct, uploadImage, optimizeProductDetails, scanProductDates } from "@/services/products";
 import { getMyShop } from "@/services/shops";
 import { ApiProductCreate, ProductCategory } from "@/types/product";
 import { useToast } from "@/components/ui/Toast";
@@ -93,25 +93,24 @@ export default function EditProductClient({ id }: { id: string }) {
 
   // 2. Fetch Product Details
   useEffect(() => {
-    if (!shopId || !id) return;
+    if (!id) return;
     setLoadingProduct(true);
-    getProducts({ shopId, hideExpired: false })
-      .then((prods) => {
-        const found = prods.find((p) => p.id === id);
+    getProductById(id)
+      .then((found) => {
         if (found) {
-          setProductName(found.name);
-          setOriginalPrice(found.original_price.toString());
-          setQuantity(found.quantity.toString());
-          setManufacturingDate(found.manufacturing_date.split("T")[0]);
-          setExpiryDate(found.expiry_date.split("T")[0]);
-          setCategory(found.category);
+          setProductName(found.name || "");
+          setOriginalPrice((found.original_price ?? 0).toString());
+          setQuantity((found.quantity ?? 1).toString());
+          setManufacturingDate(found.manufacturing_date ? found.manufacturing_date.split("T")[0] : "");
+          setExpiryDate(found.expiry_date ? found.expiry_date.split("T")[0] : "");
+          setCategory(found.category || "OTHER");
           setDescription(found.description || "");
-          setFrontImage(found.front_image_url);
-          setExpiryImage(found.expiry_image_url);
-          setAutoDiscountEnabled(found.auto_discount_enabled);
+          setFrontImage(found.front_image_url || null);
+          setExpiryImage(found.expiry_image_url || null);
+          setAutoDiscountEnabled(Boolean(found.auto_discount_enabled));
           setAutoDiscountMinPrice(found.auto_discount_min_price?.toString() || "");
         } else {
-          setError("Product deal not found in your store.");
+          setError("Product deal not found.");
         }
         setLoadingProduct(false);
       })
@@ -119,7 +118,7 @@ export default function EditProductClient({ id }: { id: string }) {
         setError("Failed to load product details: " + getErrorMessage(err));
         setLoadingProduct(false);
       });
-  }, [shopId, id]);
+  }, [id]);
 
   const handleAIOptimize = async () => {
     if (!productName.trim()) {

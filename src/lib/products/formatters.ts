@@ -1,5 +1,11 @@
-export function formatExpiryDisplay(dateString: string, nowMs?: number) {
+export function formatExpiryDisplay(dateString?: string | null, nowMs?: number) {
+  if (!dateString) {
+    return { isExpired: false, compact: "Active", full: "Active" };
+  }
   const expiryDate = new Date(dateString);
+  if (isNaN(expiryDate.getTime())) {
+    return { isExpired: false, compact: "Active", full: "Active" };
+  }
   const now = nowMs ?? Date.now();
   const diffMs = expiryDate.getTime() - now;
 
@@ -19,8 +25,8 @@ export function formatExpiryDisplay(dateString: string, nowMs?: number) {
     compact = `${diffDays}d`;
     full = `${diffDays} day${diffDays > 1 ? "s" : ""}`;
   } else {
-    compact = `${diffHours}h`;
-    full = `${diffHours} hour${diffHours !== 1 ? "s" : ""}`;
+    compact = `${Math.max(0, diffHours)}h`;
+    full = `${Math.max(0, diffHours)} hour${Math.max(0, diffHours) !== 1 ? "s" : ""}`;
   }
 
   return { isExpired: false, compact, full };

@@ -661,10 +661,16 @@ export default function AddProductPage() {
       const uploadedFrontUrl = await uploadImage(frontImageFile);
       const uploadedExpiryUrl = await uploadImage(expiryImageFile);
 
-      // 2. Create product (discount is calculated automatically on backend)
+      // 2. Create product with computed discount_price
+      const origPriceVal = parseFloat(originalPrice);
+      const computedDiscount = autoDiscountEnabled && minPriceVal
+        ? minPriceVal
+        : Math.max(1, Math.round(origPriceVal * 0.7));
+
       const productData: ApiProductCreate = {
         name: productName.trim(),
-        original_price: parseFloat(originalPrice),
+        original_price: origPriceVal,
+        discount_price: computedDiscount,
         quantity: parseInt(quantity, 10),
         manufacturing_date: manufacturingDate + "T00:00:00",
         expiry_date: expiryDate + "T23:59:59",
@@ -674,6 +680,7 @@ export default function AddProductPage() {
         voice_note_url: null,
         description: description.trim() || null,
         is_surprise_bag: false,
+        is_active: true,
         auto_discount_enabled: autoDiscountEnabled,
         auto_discount_min_price: autoDiscountEnabled ? minPriceVal : null,
       };

@@ -70,9 +70,17 @@ export default function ProductList() {
     hideExpired: activeTab === "active",
   });
 
-  const filteredProducts = products.filter((product) => {
-    if (!product.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    if (activeTab === "expired") return formatExpiryDisplay(product.expiry_date).isExpired;
+  const filteredProducts = (products || []).filter((product) => {
+    if (!product || typeof product !== "object" || !product.id) return false;
+    const name = String(product.name || "").toLowerCase();
+    if (searchQuery && !name.includes(searchQuery.toLowerCase())) return false;
+    if (activeTab === "expired") {
+      try {
+        if (!formatExpiryDisplay(product.expiry_date).isExpired) return false;
+      } catch {
+        return false;
+      }
+    }
     if (selectedCategory !== "ALL" && product.category !== selectedCategory) return false;
     return true;
   });
@@ -97,23 +105,26 @@ export default function ProductList() {
 
   const handleToggleActive = async (product: any) => {
     try {
+      const origPrice = Number(product.original_price) || 0;
+      const discPrice = Number(product.discount_price) || Number(product.auto_discount_min_price) || origPrice;
       const updatedData = {
-        name: product.name,
-        original_price: product.original_price,
-        quantity: product.quantity,
-        manufacturing_date: product.manufacturing_date,
-        expiry_date: product.expiry_date,
-        category: product.category,
-        front_image_url: product.front_image_url,
-        expiry_image_url: product.expiry_image_url,
-        voice_note_url: product.voice_note_url,
-        description: product.description,
-        is_surprise_bag: product.is_surprise_bag,
-        auto_discount_enabled: product.auto_discount_enabled,
-        auto_discount_min_price: product.auto_discount_min_price,
+        name: product.name || "Product",
+        original_price: origPrice,
+        discount_price: discPrice,
+        quantity: Number(product.quantity) || 1,
+        manufacturing_date: product.manufacturing_date || new Date().toISOString(),
+        expiry_date: product.expiry_date || new Date().toISOString(),
+        category: product.category || "OTHER",
+        front_image_url: product.front_image_url || "",
+        expiry_image_url: product.expiry_image_url || "",
+        voice_note_url: product.voice_note_url || null,
+        description: product.description || "",
+        is_surprise_bag: Boolean(product.is_surprise_bag),
+        auto_discount_enabled: Boolean(product.auto_discount_enabled),
+        auto_discount_min_price: product.auto_discount_min_price ? Number(product.auto_discount_min_price) : null,
         is_active: !product.is_active,
       };
-      await updateProduct(product.id, updatedData);
+      await updateProduct(product.id, updatedData as any);
       await refetch();
       toast.success(`Deal ${!product.is_active ? "activated" : "deactivated"} successfully!`);
     } catch {
@@ -317,8 +328,22 @@ export default function ProductList() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {filteredProducts.map((product) => {
-                    const expiry = formatExpiryDisplay(product.expiry_date);
+                    let expiry = { isExpired: false, compact: "Active", full: "Active" };
+                    try {
+                      expiry = formatExpiryDisplay(product.expiry_date);
+                    } catch {}
                     const isSelected = selectedProducts.has(product.id);
+                    const discPrice = typeof product.discount_price === "number"
+                      ? product.discount_price
+                      : Number(product.discount_price) || Number(product.auto_discount_min_price) || Number(product.original_price) || 0;
+                    const origPrice = typeof product.original_price === "number"
+                      ? product.original_price
+                      : Number(product.original_price) || 0;
+                    const safeName = product.name || "Surplus Product";
+                    const safeImg = product.front_image_url || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800";
+                    const safeQty = Number(product.quantity) || 0;
+                    const isActive = Boolean(product.is_active);
+
                     return (
                       <tr key={product.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition group ${isSelected ? "bg-emerald-50/50 dark:bg-emerald-500/5" : ""}`}>
                         <td className="px-6 py-4">
@@ -333,21 +358,24 @@ export default function ProductList() {
                           <div className="flex items-center gap-4">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={product.front_image_url}
-                              alt={product.name}
+                              src={safeImg}
+                              alt={safeName}
                               className="w-12 h-12 rounded-lg object-cover border border-gray-100 dark:border-gray-700"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800";
+                              }}
                             />
-                            <span className="font-medium text-gray-900 dark:text-white">{product.name}</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{safeName}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="font-bold text-gray-900 dark:text-white">₹{product.discount_price.toFixed(2)}</span>
-                            <span className="text-xs text-gray-400 line-through">₹{product.original_price.toFixed(2)}</span>
+                            <span className="font-bold text-gray-900 dark:text-white">₹{discPrice.toFixed(2)}</span>
+                            <span className="text-xs text-gray-400 line-through">₹{origPrice.toFixed(2)}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{product.quantity} units</span>
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{safeQty} units</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${expiry.isExpired ? "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400" : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"}`}>
@@ -360,11 +388,11 @@ export default function ProductList() {
                             <button
                               type="button"
                               onClick={() => handleToggleActive(product)}
-                              className={`p-2 rounded-lg transition flex items-center gap-1.5 text-xs font-semibold ${product.is_active ? "text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100" : "text-gray-400 hover:text-gray-500 bg-gray-100 hover:bg-gray-200"}`}
-                              title={product.is_active ? "Click to Deactivate" : "Click to Activate"}
+                              className={`p-2 rounded-lg transition flex items-center gap-1.5 text-xs font-semibold ${isActive ? "text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100" : "text-gray-400 hover:text-gray-500 bg-gray-100 hover:bg-gray-200"}`}
+                              title={isActive ? "Click to Deactivate" : "Click to Activate"}
                             >
-                              {product.is_active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
-                              <span className="hidden md:inline">{product.is_active ? "Active" : "Inactive"}</span>
+                              {isActive ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                              <span className="hidden md:inline">{isActive ? "Active" : "Inactive"}</span>
                             </button>
                             <button
                               type="button"
@@ -471,7 +499,7 @@ export default function ProductList() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Target AI Price</p>
-                        <p className="text-xl font-black text-purple-700 dark:text-purple-400">₹{forecastData.optimal_price.toFixed(2)}</p>
+                        <p className="text-xl font-black text-purple-700 dark:text-purple-400">₹{(Number(forecastData?.optimal_price) || 0).toFixed(2)}</p>
                       </div>
                     </div>
                   </div>

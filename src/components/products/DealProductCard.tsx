@@ -186,7 +186,7 @@ export const DealProductCard = React.memo(function DealProductCardBase({
             <ShieldCheck size={11} className="text-emerald-500 shrink-0" />
             {distance !== null && (
               <span className="text-[10px] text-zinc-400 font-semibold ml-0.5">
-                • {distance.toFixed(1)}km
+                • {typeof distance === "number" ? distance.toFixed(1) : "0.0"}km
               </span>
             )}
           </div>
@@ -228,7 +228,7 @@ export const DealProductCard = React.memo(function DealProductCardBase({
                 <span>EST. SELLOUT: ~{forecast.selloutHours}h</span>
               </div>
               <p className="text-[10px] text-zinc-500 leading-tight">
-                Floor: ₹{forecast.optimalPrice} • Save ₹{(originalPrice - currentPrice).toFixed(0)} before expiry!
+                Floor: ₹{forecast.optimalPrice} • Save ₹{(Math.max(0, (Number(originalPrice) || 0) - (Number(currentPrice) || 0))).toFixed(0)} before expiry!
               </p>
             </motion.div>
           )}

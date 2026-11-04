@@ -13,6 +13,10 @@ export type GetProductsParams = {
   radius_km?: number;
 };
 
+export async function getProductById(productId: string): Promise<ApiProduct> {
+  return apiRequest<ApiProduct>(`/products/${productId}`);
+}
+
 export async function getProducts(params: GetProductsParams = {}): Promise<ApiProduct[]> {
   try {
     const search = new URLSearchParams();

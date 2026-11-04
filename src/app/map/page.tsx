@@ -418,10 +418,10 @@ export default function MapDiscovery() {
                           </p>
                           <div className="flex items-center gap-1.5 text-xs">
                             <span className="font-black text-emerald-600 dark:text-emerald-400">
-                              ₹{deal.discount_price.toFixed(0)}
+                              ₹{(Number(deal.discount_price ?? deal.original_price) || 0).toFixed(0)}
                             </span>
                             <span className="text-[10px] text-slate-400 line-through">
-                              ₹{deal.original_price.toFixed(0)}
+                              ₹{(Number(deal.original_price) || 0).toFixed(0)}
                             </span>
                           </div>
                         </div>
