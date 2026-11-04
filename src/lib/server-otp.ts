@@ -66,6 +66,8 @@ export interface StoreData {
   users: Record<string, StoredUser>;
   shops: Record<string, StoredShop>;
   products: any[];
+  reservations?: any[];
+  orders?: any[];
 }
 
 const BLOB_STORE_FILENAME = "expirygo_db_v1.json";
@@ -146,6 +148,12 @@ function ensureBaseline(store: StoreData): void {
   if (!Array.isArray(store.products)) {
     store.products = [];
   }
+  if (!Array.isArray(store.reservations)) {
+    store.reservations = [];
+  }
+  if (!Array.isArray(store.orders)) {
+    store.orders = [];
+  }
 }
 
 function loadLocalStore(): StoreData {
@@ -159,6 +167,8 @@ function loadLocalStore(): StoreData {
           users: parsed.users || {},
           shops: parsed.shops || {},
           products: Array.isArray(parsed.products) ? parsed.products : [],
+          reservations: Array.isArray(parsed.reservations) ? parsed.reservations : [],
+          orders: Array.isArray(parsed.orders) ? parsed.orders : [],
         };
         ensureBaseline(store);
         return store;
@@ -167,7 +177,7 @@ function loadLocalStore(): StoreData {
   } catch (err) {
     console.warn("[STORE] Failed to read local store file:", err);
   }
-  const fresh: StoreData = { otps: {}, users: {}, shops: {}, products: [] };
+  const fresh: StoreData = { otps: {}, users: {}, shops: {}, products: [], reservations: [], orders: [] };
   ensureBaseline(fresh);
   return fresh;
 }
@@ -199,6 +209,12 @@ export async function ensureStoreLoaded(): Promise<StoreData> {
         globalStore.shops = { ...cloudData.shops, ...globalStore.shops };
         if (Array.isArray(cloudData.products)) {
           globalStore.products = cloudData.products;
+        }
+        if (Array.isArray(cloudData.reservations)) {
+          globalStore.reservations = cloudData.reservations;
+        }
+        if (Array.isArray(cloudData.orders)) {
+          globalStore.orders = cloudData.orders;
         }
         ensureBaseline(globalStore);
         lastCloudSync = now;
@@ -488,6 +504,58 @@ export function deleteProduct(id: string): void {
   if (!globalStore.products) return;
   globalStore.products = globalStore.products.filter((p) => p.id !== id);
   saveStore(globalStore);
+}
+
+export async function getAllReservationsAsync(): Promise<any[]> {
+  await ensureStoreLoaded();
+  return globalStore.reservations || [];
+}
+
+export async function getReservationByIdAsync(id: string): Promise<any | undefined> {
+  await ensureStoreLoaded();
+  return (globalStore.reservations || []).find((r) => r.id === id);
+}
+
+export async function addReservationAsync(reservation: any): Promise<void> {
+  if (!globalStore.reservations) globalStore.reservations = [];
+  globalStore.reservations.unshift(reservation);
+  await saveStoreAsync(globalStore);
+}
+
+export async function updateReservationAsync(id: string, updates: any): Promise<any | null> {
+  await ensureStoreLoaded();
+  if (!globalStore.reservations) globalStore.reservations = [];
+  const idx = globalStore.reservations.findIndex((r) => r.id === id);
+  if (idx === -1) return null;
+  globalStore.reservations[idx] = { ...globalStore.reservations[idx], ...updates };
+  await saveStoreAsync(globalStore);
+  return globalStore.reservations[idx];
+}
+
+export async function getAllOrdersAsync(): Promise<any[]> {
+  await ensureStoreLoaded();
+  return globalStore.orders || [];
+}
+
+export async function getOrderByIdAsync(id: string): Promise<any | undefined> {
+  await ensureStoreLoaded();
+  return (globalStore.orders || []).find((o) => o.id === id);
+}
+
+export async function addOrderAsync(order: any): Promise<void> {
+  if (!globalStore.orders) globalStore.orders = [];
+  globalStore.orders.unshift(order);
+  await saveStoreAsync(globalStore);
+}
+
+export async function updateOrderAsync(id: string, updates: any): Promise<any | null> {
+  await ensureStoreLoaded();
+  if (!globalStore.orders) globalStore.orders = [];
+  const idx = globalStore.orders.findIndex((o) => o.id === id);
+  if (idx === -1) return null;
+  globalStore.orders[idx] = { ...globalStore.orders[idx], ...updates };
+  await saveStoreAsync(globalStore);
+  return globalStore.orders[idx];
 }
 
 export function createToken(userId: string, role: string = "CUSTOMER"): string {

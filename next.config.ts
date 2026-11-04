@@ -29,6 +29,34 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "127.0.0.1", port: "8000" },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/reservations/me",
+        destination: "/api/reservations/me",
+      },
+      {
+        source: "/shops/reservations",
+        destination: "/api/shops/reservations",
+      },
+      {
+        source: "/reservations/:id/verify",
+        destination: "/api/reservations/:id/verify",
+      },
+      {
+        source: "/reservations/:id/checkout",
+        destination: "/api/reservations/:id/checkout",
+      },
+      {
+        source: "/orders/me",
+        destination: "/api/orders/me",
+      },
+      {
+        source: "/shops/orders",
+        destination: "/api/shops/orders",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
