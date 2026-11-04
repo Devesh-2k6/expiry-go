@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { generateOtp, saveOtp, sendSmtpOtp } from "@/lib/server-otp";
+import crypto from "crypto";
+import { generateOtp, saveOtp, sendSmtpOtp, saveShop, getShopByOwnerId, type StoredShop } from "@/lib/server-otp";
 
 export async function POST(req: Request) {
   try {
@@ -38,6 +39,37 @@ export async function POST(req: Request) {
       latitude,
       longitude,
     });
+
+    // Create or update pending shop immediately so it appears in the Admin review queue
+    const ownerPlaceholder = `vendor_${email}`;
+    const existing = getShopByOwnerId(ownerPlaceholder);
+    const shop: StoredShop = {
+      id: existing?.id || crypto.randomUUID(),
+      owner_id: ownerPlaceholder,
+      name: shopName,
+      category,
+      owner_name: shopName,
+      owner_email: email,
+      owner_phone: phoneNumber,
+      phone_number: phoneNumber,
+      address: address || "Commercial Market Location",
+      latitude,
+      longitude,
+      upi_id: upiId || null,
+      photo_url: photoUrl || null,
+      document_url: documentUrl || null,
+      verification_document_url: documentUrl || null,
+      verification_document_name: "Business License Document",
+      approval_status: existing?.approval_status || "PENDING",
+      approval_reason: null,
+      approved_at: null,
+      approved_by: null,
+      rejected_at: null,
+      is_active: false,
+      location_verified: true,
+      created_at: existing?.created_at || new Date().toISOString(),
+    };
+    saveShop(shop);
 
     await sendSmtpOtp(email, code, shopName);
 

@@ -6,6 +6,7 @@ import {
   saveUser,
   saveShop,
   getShopByOwnerId,
+  getAllShops,
   createToken,
   type StoredUser,
   type StoredShop,
@@ -61,8 +62,18 @@ export async function POST(req: Request) {
     }
 
     if (isVendor) {
-      let existingShop = getShopByOwnerId(user.id);
-      if (!existingShop) {
+      // Check if pending shop was created during registration
+      const allShops = getAllShops();
+      let existingShop =
+        getShopByOwnerId(user.id) ||
+        getShopByOwnerId(`vendor_${identifier}`) ||
+        allShops.find((s) => s.owner_email === identifier);
+
+      if (existingShop) {
+        existingShop.owner_id = user.id;
+        existingShop.owner_name = user.name;
+        saveShop(existingShop);
+      } else {
         const newShop: StoredShop = {
           id: crypto.randomUUID(),
           owner_id: user.id,
