@@ -116,7 +116,6 @@ export default function AuthPage() {
   
   const [roleMode, setRoleMode] = useState<RoleMode>(initialRole);
   const [loginAuthType, setLoginAuthType] = useState<"password" | "otp">("password");
-  const [signupAuthType, setSignupAuthType] = useState<"password" | "otp">("password");
   const [otpSourceTab, setOtpSourceTab] = useState<"login" | "signup">("login");
 
   useEffect(() => {
@@ -373,17 +372,15 @@ export default function AuthPage() {
 
     try {
       if (roleMode === "customer") {
-        if (signupAuthType === "password") {
-          if (!customerPassword || customerPassword.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            setSubmitting(false);
-            return;
-          }
-          if (customerPassword !== customerConfirmPassword) {
-            setError("Passwords do not match. Please re-enter your password.");
-            setSubmitting(false);
-            return;
-          }
+        if (!customerPassword || customerPassword.length < 6) {
+          setError("Password must be at least 6 characters long.");
+          setSubmitting(false);
+          return;
+        }
+        if (customerPassword !== customerConfirmPassword) {
+          setError("Passwords do not match. Please re-enter your password.");
+          setSubmitting(false);
+          return;
         }
 
         const cleanEmail = customerEmail.trim().toLowerCase();
@@ -391,7 +388,7 @@ export default function AuthPage() {
           await customerSignup({
             name: customerName.trim(),
             email: cleanEmail,
-            password: signupAuthType === "password" ? customerPassword.trim() : undefined,
+            password: customerPassword.trim(),
           });
 
           // Mandatory OTP verification transition
@@ -410,17 +407,15 @@ export default function AuthPage() {
         }
       } else {
         // Vendor Signup
-        if (signupAuthType === "password") {
-          if (!vendorPassword || vendorPassword.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            setSubmitting(false);
-            return;
-          }
-          if (vendorPassword !== vendorConfirmPassword) {
-            setError("Passwords do not match. Please re-enter your password.");
-            setSubmitting(false);
-            return;
-          }
+        if (!vendorPassword || vendorPassword.length < 6) {
+          setError("Password must be at least 6 characters long.");
+          setSubmitting(false);
+          return;
+        }
+        if (vendorPassword !== vendorConfirmPassword) {
+          setError("Passwords do not match. Please re-enter your password.");
+          setSubmitting(false);
+          return;
         }
 
         const cleanEmail = vendorEmail.trim().toLowerCase();
@@ -431,7 +426,7 @@ export default function AuthPage() {
             email: cleanEmail,
             phone_number: vendorPhone.trim(),
             upi_id: vendorUpiId.trim() || undefined,
-            password: signupAuthType === "password" ? vendorPassword.trim() : undefined,
+            password: vendorPassword.trim(),
             photo_url: vendorPhotoUrl || "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800",
             document_url: vendorDocUrl || "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800",
             address: vendorAddress.trim() || undefined,
@@ -1035,38 +1030,6 @@ export default function AuthPage() {
         {/* TAB: SIGN UP (CUSTOMER / VENDOR) */}
         {tab === "signup" && (
           <div className="space-y-4">
-            {/* Signup Mode Switcher: Password + OTP vs Instant OTP */}
-            <div className="flex bg-slate-100 dark:bg-gray-800/80 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={() => {
-                  setSignupAuthType("password");
-                  setError("");
-                }}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  signupAuthType === "password"
-                    ? "bg-white dark:bg-gray-900 text-purple-700 dark:text-purple-300 shadow-sm font-black"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Password + OTP
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSignupAuthType("otp");
-                  setError("");
-                }}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  signupAuthType === "otp"
-                    ? "bg-white dark:bg-gray-900 text-purple-700 dark:text-purple-400 shadow-sm font-black"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                ⚡ 6-Digit OTP Sign Up
-              </button>
-            </div>
-
             <form onSubmit={handleSignupSubmit} autoComplete="off" className="space-y-4">
               {roleMode === "customer" ? (
                 <>
@@ -1101,59 +1064,50 @@ export default function AuthPage() {
                     />
                   </div>
 
-                  {signupAuthType === "password" ? (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                            Create Password <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type={showSignupPassword ? "text" : "password"}
-                            name="cust_password_field"
-                            autoComplete="new-password"
-                            required={signupAuthType === "password"}
-                            minLength={6}
-                            value={customerPassword}
-                            onChange={(e) => setCustomerPassword(e.target.value)}
-                            className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                            placeholder="Min 6 characters"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                            Confirm Password <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type={showSignupPassword ? "text" : "password"}
-                            name="cust_confirm_password_field"
-                            autoComplete="new-password"
-                            required={signupAuthType === "password"}
-                            minLength={6}
-                            value={customerConfirmPassword}
-                            onChange={(e) => setCustomerConfirmPassword(e.target.value)}
-                            className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                            placeholder="Repeat password"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <input
-                          type="checkbox"
-                          id="showCustPass"
-                          checked={showSignupPassword}
-                          onChange={(e) => setShowSignupPassword(e.target.checked)}
-                          className="accent-purple-600 rounded"
-                        />
-                        <label htmlFor="showCustPass" className="cursor-pointer">Show password text</label>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/50 rounded-2xl p-3.5 text-xs text-purple-800 dark:text-purple-300 flex items-center gap-2.5">
-                      <Zap size={18} className="text-purple-600 shrink-0" />
-                      <span>Instant 6-Digit OTP Signup: No password needed. We will send a secure 6-digit verification code to your email.</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                        Create Password <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type={showSignupPassword ? "text" : "password"}
+                        name="cust_password_field"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                        value={customerPassword}
+                        onChange={(e) => setCustomerPassword(e.target.value)}
+                        className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                        placeholder="Min 6 characters"
+                      />
                     </div>
-                  )}
+                    <div>
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                        Confirm Password <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type={showSignupPassword ? "text" : "password"}
+                        name="cust_confirm_password_field"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                        value={customerConfirmPassword}
+                        onChange={(e) => setCustomerConfirmPassword(e.target.value)}
+                        className="w-full rounded-2xl border border-purple-100 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                        placeholder="Repeat password"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <input
+                      type="checkbox"
+                      id="showCustPass"
+                      checked={showSignupPassword}
+                      onChange={(e) => setShowSignupPassword(e.target.checked)}
+                      className="accent-purple-600 rounded"
+                    />
+                    <label htmlFor="showCustPass" className="cursor-pointer">Show password text</label>
+                  </div>
                 </>
               ) : (
                 <>
@@ -1249,59 +1203,50 @@ export default function AuthPage() {
                     />
                   </div>
 
-                  {signupAuthType === "password" ? (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                            Create Login Password <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type={showSignupPassword ? "text" : "password"}
-                            name="vendor_pass_field"
-                            autoComplete="new-password"
-                            required={signupAuthType === "password"}
-                            minLength={6}
-                            value={vendorPassword}
-                            onChange={(e) => setVendorPassword(e.target.value)}
-                            className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                            placeholder="Min 6 characters"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
-                            Confirm Password <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type={showSignupPassword ? "text" : "password"}
-                            name="vendor_confirm_pass_field"
-                            autoComplete="new-password"
-                            required={signupAuthType === "password"}
-                            minLength={6}
-                            value={vendorConfirmPassword}
-                            onChange={(e) => setVendorConfirmPassword(e.target.value)}
-                            className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
-                            placeholder="Repeat password"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <input
-                          type="checkbox"
-                          id="showVendPass"
-                          checked={showSignupPassword}
-                          onChange={(e) => setShowSignupPassword(e.target.checked)}
-                          className="accent-purple-600 rounded"
-                        />
-                        <label htmlFor="showVendPass" className="cursor-pointer">Show password text</label>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/50 rounded-2xl p-3.5 text-xs text-purple-800 dark:text-purple-300 flex items-center gap-2.5">
-                      <Zap size={18} className="text-purple-600 shrink-0" />
-                      <span>Instant 6-Digit OTP Signup: No password needed. We will send a secure 6-digit verification code to your store email.</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                        Create Login Password <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type={showSignupPassword ? "text" : "password"}
+                        name="vendor_pass_field"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                        value={vendorPassword}
+                        onChange={(e) => setVendorPassword(e.target.value)}
+                        className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                        placeholder="Min 6 characters"
+                      />
                     </div>
-                  )}
+                    <div>
+                      <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-gray-400 mb-1.5">
+                        Confirm Password <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type={showSignupPassword ? "text" : "password"}
+                        name="vendor_confirm_pass_field"
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                        value={vendorConfirmPassword}
+                        onChange={(e) => setVendorConfirmPassword(e.target.value)}
+                        className="w-full rounded-2xl border border-purple-200 dark:border-gray-700 bg-white/90 dark:bg-gray-950 text-slate-900 dark:text-white px-4 py-3 outline-none focus:border-purple-500 text-sm font-medium"
+                        placeholder="Repeat password"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <input
+                      type="checkbox"
+                      id="showVendPass"
+                      checked={showSignupPassword}
+                      onChange={(e) => setShowSignupPassword(e.target.checked)}
+                      className="accent-purple-600 rounded"
+                    />
+                    <label htmlFor="showVendPass" className="cursor-pointer">Show password text</label>
+                  </div>
 
                   {/* Upload Shop Photo */}
                   <div>
@@ -1428,8 +1373,8 @@ export default function AuthPage() {
                   <Zap size={18} />
                 )}
                 {roleMode === "customer"
-                  ? (signupAuthType === "otp" ? "Send 6-Digit OTP & Register" : "Continue with OTP Verification")
-                  : (signupAuthType === "otp" ? "Send Store OTP & Register" : "Register Store & Verify OTP")}
+                  ? "Continue with OTP Verification"
+                  : "Register Store & Verify OTP"}
               </button>
             </form>
           </div>
