@@ -100,48 +100,19 @@ function getStoredItems(): ApiPantryItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      // Initialize with default fridge items
-      const now = Date.now();
-      const initial: any[] = [
-        {
-          id: "fridge_init_1",
-          name: "Fresh Whole Milk",
-          category: "DAIRY",
-          quantity: "1 Litre",
-          expiry_date: new Date(now + 28 * 3600 * 1000).toISOString(),
-          is_consumed: false,
-        },
-        {
-          id: "fridge_init_2",
-          name: "Artisan Sourdough Bread",
-          category: "BAKERY",
-          quantity: "1 Loaf",
-          expiry_date: new Date(now + 18 * 3600 * 1000).toISOString(),
-          is_consumed: false,
-        },
-        {
-          id: "fridge_init_3",
-          name: "Organic Paneer",
-          category: "DAIRY",
-          quantity: "200g",
-          expiry_date: new Date(now + 52 * 3600 * 1000).toISOString(),
-          is_consumed: false,
-        },
-        {
-          id: "fridge_init_4",
-          name: "Baby Spinach Leaves",
-          category: "PRODUCE",
-          quantity: "250g",
-          expiry_date: new Date(now + 22 * 3600 * 1000).toISOString(),
-          is_consumed: false,
-        },
-      ];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-      return initial.map(serializeItem);
+      // Empty by default — NO demo data
+      return [];
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed.map(serializeItem);
+      // Clean up any legacy demo items
+      const realOnly = parsed.filter(
+        (i) => i && i.id && !String(i.id).startsWith("fridge_init_")
+      );
+      if (realOnly.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(realOnly));
+      }
+      return realOnly.map(serializeItem);
     }
   } catch (e) {
     console.warn("[PANTRY STORAGE] Could not read local pantry:", e);
@@ -161,7 +132,6 @@ function saveStoredItems(items: ApiPantryItem[]) {
 export async function getPantryItems(includeConsumed = false): Promise<ApiPantryItem[]> {
   const local = getStoredItems();
   const filtered = includeConsumed ? local : local.filter((i) => !i.is_consumed);
-  // Sort with nearest expiring first
   filtered.sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
   return filtered;
 }
@@ -247,28 +217,24 @@ export async function getPantrySmartAlerts(): Promise<ApiPantrySmartAlert[]> {
 
 export async function generateRecipeFromFridge(): Promise<ApiRecipeResponse> {
   const items = await getPantryItems(false);
+  if (items.length === 0) {
+    throw new Error("Your Digital Fridge is empty. Add grocery items first to generate a zero-waste recipe.");
+  }
   const names = items.map((i) => i.name).join(", ");
   const critical = items.find((i) => i.hours_left <= 48) || items[0];
-
-  const primaryName = critical ? critical.name : "Surplus Harvest";
+  const primaryName = critical ? critical.name : "Surplus Item";
 
   return {
     recipe_name: `Zero-Waste ${primaryName} Skillet Delight`,
-    description: `A nutritious, zero-waste gourmet dish crafted specifically to rescue your ${primaryName} and remaining fridge ingredients (${names || "vegetables and dairy"}).`,
+    description: `A nutritious, zero-waste gourmet dish crafted specifically to rescue your ${primaryName} and remaining fridge ingredients (${names}).`,
     prep_time: "8 mins",
     cook_time: "12 mins",
     difficulty: "Easy",
-    ingredients: items.length > 0
-      ? items.slice(0, 5).map((i) => ({
-          name: i.name,
-          is_deal: true,
-          quantity: i.quantity || "1 portion",
-        }))
-      : [
-          { name: "Fresh Milk", is_deal: true, quantity: "200 ml" },
-          { name: "Whole Bread Slices", is_deal: true, quantity: "2 slices" },
-          { name: "Paneer or Cheese", is_deal: true, quantity: "100g" },
-        ],
+    ingredients: items.slice(0, 5).map((i) => ({
+      name: i.name,
+      is_deal: true,
+      quantity: i.quantity || "1 portion",
+    })),
     instructions: [
       {
         step_number: 1,
