@@ -9,7 +9,15 @@ export type OtpRecord = {
   name?: string;
   is_vendor?: boolean;
   hashed_password?: string;
+  password?: string;
   phone_number?: string;
+  category?: string;
+  upi_id?: string;
+  photo_url?: string;
+  document_url?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 export type StoredUser = {
@@ -29,16 +37,27 @@ export type StoredShop = {
   owner_id: string;
   name: string;
   category?: string;
+  owner_name?: string | null;
+  owner_email?: string | null;
+  owner_phone?: string | null;
+  phone_number?: string;
   address: string;
   latitude: number;
   longitude: number;
-  phone_number?: string;
-  upi_id?: string;
-  photo_url?: string;
-  document_url?: string;
-  approval_status: "PENDING" | "APPROVED" | "REJECTED";
+  upi_id?: string | null;
+  photo_url?: string | null;
+  document_url?: string | null;
+  verification_document_url?: string | null;
+  verification_document_name?: string | null;
+  approval_status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+  approval_reason?: string | null;
+  approved_at?: string | null;
+  approved_by?: string | null;
+  rejected_at?: string | null;
   is_active: boolean;
   location_verified: boolean;
+  location_verified_at?: string | null;
+  created_at?: string;
 };
 
 // Path for serverless file storage in /tmp
@@ -85,7 +104,7 @@ export function generateOtp(): string {
 export function saveOtp(
   email: string,
   code: string,
-  extra?: { name?: string; is_vendor?: boolean; password?: string; phone_number?: string }
+  extra?: Partial<OtpRecord>
 ): void {
   const clean = email.trim().toLowerCase();
   globalStore.otps[clean] = {
@@ -93,8 +112,15 @@ export function saveOtp(
     expires_at: Date.now() + 10 * 60 * 1000, // 10 minutes
     name: extra?.name,
     is_vendor: extra?.is_vendor,
-    hashed_password: extra?.password,
+    hashed_password: extra?.hashed_password || extra?.password,
     phone_number: extra?.phone_number,
+    category: extra?.category,
+    upi_id: extra?.upi_id,
+    photo_url: extra?.photo_url,
+    document_url: extra?.document_url,
+    address: extra?.address,
+    latitude: extra?.latitude,
+    longitude: extra?.longitude,
   };
   saveStore(globalStore);
 }
@@ -114,7 +140,7 @@ export function verifyOtpCode(email: string, code: string): { valid: boolean; re
     return { valid: false };
   }
 
-  // Exact OTP match only - zero hardcoded demo codes
+  // Exact OTP match only
   if (record.code === cleanCode) {
     delete globalStore.otps[clean];
     saveStore(globalStore);
@@ -137,17 +163,33 @@ export function getUserById(id: string): StoredUser | undefined {
   return Object.values(globalStore.users).find((u) => u.id === id);
 }
 
+export function getAllUsers(): StoredUser[] {
+  return Object.values(globalStore.users);
+}
+
 export function saveShop(shop: StoredShop): void {
-  globalStore.shops[shop.owner_id] = shop;
+  globalStore.shops[shop.id] = shop;
   saveStore(globalStore);
 }
 
+export function getShopById(id: string): StoredShop | undefined {
+  return (
+    globalStore.shops[id] ||
+    Object.values(globalStore.shops).find((s) => s.id === id || s.owner_id === id)
+  );
+}
+
 export function getShopByOwnerId(ownerId: string): StoredShop | undefined {
-  return globalStore.shops[ownerId];
+  return Object.values(globalStore.shops).find((s) => s.owner_id === ownerId);
 }
 
 export function getAllShops(): StoredShop[] {
   return Object.values(globalStore.shops);
+}
+
+export function deleteShop(id: string): void {
+  delete globalStore.shops[id];
+  saveStore(globalStore);
 }
 
 export function getAllProducts(): any[] {

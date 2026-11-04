@@ -5,8 +5,10 @@ import {
   getUser,
   saveUser,
   saveShop,
+  getShopByOwnerId,
   createToken,
   type StoredUser,
+  type StoredShop,
 } from "@/lib/server-otp";
 
 export async function POST(req: Request) {
@@ -49,20 +51,6 @@ export async function POST(req: Request) {
         created_at: new Date().toISOString(),
       };
       saveUser(user);
-
-      if (isVendor) {
-        saveShop({
-          id: crypto.randomUUID(),
-          owner_id: user.id,
-          name: finalName.toLowerCase().includes("shop") ? finalName : `${finalName}'s Store`,
-          address: "Commercial Market Location",
-          latitude: 13.0827,
-          longitude: 80.2707,
-          approval_status: "PENDING",
-          is_active: false,
-          location_verified: true,
-        });
-      }
     } else {
       user.email_verified = true;
       if (isVendor && !user.is_shop_owner) {
@@ -70,6 +58,39 @@ export async function POST(req: Request) {
         user.role = "VENDOR";
       }
       saveUser(user);
+    }
+
+    if (isVendor) {
+      let existingShop = getShopByOwnerId(user.id);
+      if (!existingShop) {
+        const newShop: StoredShop = {
+          id: crypto.randomUUID(),
+          owner_id: user.id,
+          name: record?.name || finalName,
+          category: record?.category || "grocery",
+          owner_name: user.name,
+          owner_email: user.email,
+          owner_phone: record?.phone_number || user.phone_number || "",
+          phone_number: record?.phone_number || user.phone_number || "",
+          address: record?.address || "Commercial Market Location",
+          latitude: record?.latitude || 13.0827,
+          longitude: record?.longitude || 80.2707,
+          upi_id: record?.upi_id || null,
+          photo_url: record?.photo_url || null,
+          document_url: record?.document_url || null,
+          verification_document_url: record?.document_url || null,
+          verification_document_name: "Business License Document",
+          approval_status: "PENDING",
+          approval_reason: null,
+          approved_at: null,
+          approved_by: null,
+          rejected_at: null,
+          is_active: false,
+          location_verified: true,
+          created_at: new Date().toISOString(),
+        };
+        saveShop(newShop);
+      }
     }
 
     const token = createToken(user.id, user.role);
@@ -97,4 +118,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
