@@ -1,5 +1,6 @@
 import { apiRequest } from "@/api/client";
 import type { ApiProduct, ApiProductCreate, ProductCategory, ApiFavorite } from "@/types/product";
+import { findWorldEasiestRecipe } from "@/lib/recipes/engine";
 
 export type GetProductsParams = {
   skip?: number;
@@ -282,10 +283,18 @@ export type ApiRecipeResponse = {
 };
 
 export async function generateRecipe(products: RecipeProductItem[]): Promise<ApiRecipeResponse> {
-  return apiRequest<ApiRecipeResponse>("/products/recipe-generator", {
-    method: "POST",
-    json: { products },
-  });
+  try {
+    const res = await apiRequest<ApiRecipeResponse>("/products/recipe-generator", {
+      method: "POST",
+      json: { products },
+    });
+    if (res && res.recipe_name && Array.isArray(res.ingredients) && Array.isArray(res.instructions)) {
+      return res;
+    }
+  } catch (e) {
+    console.warn("[RECIPE GENERATOR] API fallback to local recipe engine:", e);
+  }
+  return findWorldEasiestRecipe(products);
 }
 
 export type ApiVoiceProductParseResponse = {

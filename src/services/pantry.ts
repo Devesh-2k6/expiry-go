@@ -1,6 +1,7 @@
 import { apiRequest } from "@/api/client";
 import type { ProductCategory } from "@/types/product";
 import type { ApiRecipeResponse } from "@/types/recipe";
+import { findWorldEasiestRecipe } from "@/lib/recipes/engine";
 
 export type ApiPantryItem = {
   id: string;
@@ -220,41 +221,7 @@ export async function generateRecipeFromFridge(): Promise<ApiRecipeResponse> {
   if (items.length === 0) {
     throw new Error("Your Digital Fridge is empty. Add grocery items first to generate a zero-waste recipe.");
   }
-  const names = items.map((i) => i.name).join(", ");
-  const critical = items.find((i) => i.hours_left <= 48) || items[0];
-  const primaryName = critical ? critical.name : "Surplus Item";
-
-  return {
-    recipe_name: `Zero-Waste ${primaryName} Skillet Delight`,
-    description: `A nutritious, zero-waste gourmet dish crafted specifically to rescue your ${primaryName} and remaining fridge ingredients (${names}).`,
-    prep_time: "8 mins",
-    cook_time: "12 mins",
-    difficulty: "Easy",
-    ingredients: items.slice(0, 5).map((i) => ({
-      name: i.name,
-      is_deal: true,
-      quantity: i.quantity || "1 portion",
-    })),
-    instructions: [
-      {
-        step_number: 1,
-        instruction: `Gently prep and dice the ${primaryName} into bite-sized pieces. Heat 1 tbsp butter or oil in a pan.`,
-      },
-      {
-        step_number: 2,
-        instruction: "Sauté the ingredients over medium heat for 4-5 minutes until golden and aromatic.",
-      },
-      {
-        step_number: 3,
-        instruction: "Season with fresh black pepper, a pinch of salt, and mixed herbs or mild chili flakes.",
-      },
-      {
-        step_number: 4,
-        instruction: "Serve immediately while warm and crisp. Enjoy your sustainable zero-waste meal!",
-      },
-    ],
-    waste_saved_summary: `Saved approximately 0.65 kg of potential food waste and reduced kitchen carbon footprint by 1.2 kg CO₂e!`,
-  };
+  return findWorldEasiestRecipe(items.map((i) => ({ name: i.name, category: i.category })));
 }
 
 export async function autoImportFromReservation(reservationId: string): Promise<ApiPantryItem> {
