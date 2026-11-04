@@ -111,7 +111,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
               <Leaf size={20} className="fill-current" />
             </div>
             <span className="text-xl font-black tracking-tight text-slate-900">
-              Mee<span className="text-[#7C3AED]">va</span>
+              Expiry<span className="text-[#7C3AED]">Go</span>
             </span>
           </Link>
           <button

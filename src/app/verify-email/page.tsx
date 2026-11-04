@@ -179,7 +179,7 @@ function VerifyEmailContent() {
           <Leaf size={24} />
         </div>
         <span className="text-3xl font-black tracking-tight">
-          Mee<span className="text-purple-600 dark:text-purple-400">va</span>
+          Expiry<span className="text-purple-600 dark:text-purple-400">Go</span>
         </span>
       </Link>
 

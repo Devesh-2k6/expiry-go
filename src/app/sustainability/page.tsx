@@ -37,7 +37,7 @@ export default function SustainabilityPage() {
           </Link>
           <div className="flex items-center gap-2">
             <span className="text-xl font-black tracking-tight text-white">
-              Mee<span className="text-purple-400">va</span>
+              Expiry<span className="text-purple-400">Go</span>
             </span>
             <span className="text-xs text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
               ESG & Sustainability

@@ -25,7 +25,7 @@ export default function NotFound() {
             <Leaf size={22} className="fill-white" />
           </div>
           <span className="text-2xl font-black tracking-tight text-slate-900">
-            Mee<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">va</span>
+            Expiry<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Go</span>
           </span>
         </Link>
 

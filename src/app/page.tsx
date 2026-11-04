@@ -211,7 +211,7 @@ export default function Home() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-black tracking-tight text-slate-900 leading-none">
-                Mee<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">va</span>
+                Expiry<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Go</span>
               </span>
               <span className="text-[10px] font-extrabold text-purple-700/80 uppercase tracking-widest leading-none mt-0.5">
                 Surplus Rescue Engine
@@ -662,7 +662,7 @@ export default function Home() {
                   <Leaf size={18} />
                 </div>
                 <span className="text-2xl font-black tracking-tight text-white">
-                  Mee<span className="text-purple-400">va</span>
+                  Expiry<span className="text-purple-400">Go</span>
                 </span>
               </Link>
               <p className="text-slate-400 text-sm leading-relaxed max-w-sm mb-6 font-medium">
