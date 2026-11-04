@@ -240,7 +240,7 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
   const shopName = reservation.product.shop?.name || "Local Partner Store";
   const shopAddress = reservation.product.shop?.address || "Store Counter";
   const shopUpi = reservation.product.shop?.upi_id || "expirygo.pay@upi";
-  const upiPayUrl = `upi://pay?pa=${encodeURIComponent(shopUpi)}&pn=${encodeURIComponent(shopName)}&am=${reservation.total_price.toFixed(2)}&cu=INR&tn=ExpiryGo%20Surplus%20Rescue`;
+  const upiPayUrl = `upi://pay?pa=${encodeURIComponent(shopUpi)}&pn=${encodeURIComponent(shopName)}&am=${(Number(reservation?.total_price) || 0).toFixed(2)}&cu=INR&tn=ExpiryGo%20Surplus%20Rescue`;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
@@ -298,7 +298,7 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
               <div className="pt-3 border-t border-slate-800/80 text-left text-xs space-y-1.5 text-gray-300">
                 <div className="flex justify-between items-center font-bold">
                   <span className="truncate max-w-[200px] text-white">{reservation.product.name}</span>
-                  <span className="text-emerald-400 font-mono">₹{reservation.total_price.toFixed(2)}</span>
+                  <span className="text-emerald-400 font-mono">₹{(Number(reservation?.total_price) || 0).toFixed(2)}</span>
                 </div>
                 <div className="text-[11px] text-gray-400 flex items-start gap-1">
                   <MapPin size={12} className="shrink-0 mt-0.5 text-purple-600 dark:text-purple-400" />
@@ -368,7 +368,7 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
                 </div>
                 <div className="text-right">
                   <div className="text-base font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                    ₹{reservation.total_price.toFixed(2)}
+                    ₹{(Number(reservation?.total_price) || 0).toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -424,7 +424,7 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
                       <span>Zero Upfront Online Payment Required</span>
                     </div>
                     <p className="text-[11px] text-emerald-950 dark:text-emerald-200/80 leading-relaxed">
-                      Reserve this discount immediately. You can pay <strong>₹{reservation.total_price.toFixed(2)}</strong> directly to the merchant at the shop counter using <strong>Cash</strong> or the merchant&apos;s <strong>Store Soundbox QR</strong> when picking up.
+                      Reserve this discount immediately. You can pay <strong>₹{(Number(reservation?.total_price) || 0).toFixed(2)}</strong> directly to the merchant at the shop counter using <strong>Cash</strong> or the merchant&apos;s <strong>Store Soundbox QR</strong> when picking up.
                     </p>
                     <div className="text-[10px] text-gray-500 dark:text-gray-400 pt-1 flex items-start gap-1">
                       <MapPin size={12} className="shrink-0 mt-0.5 text-emerald-600" />
@@ -474,7 +474,7 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
                     </div>
 
                     <div className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                      Pay Exact Amount: ₹{reservation.total_price.toFixed(2)}
+                      Pay Exact Amount: ₹{(Number(reservation?.total_price) || 0).toFixed(2)}
                     </div>
                   </div>
 
@@ -588,7 +588,7 @@ export default function CheckoutClient({ reservationId }: { reservationId: strin
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition cursor-pointer"
                   >
                     <Lock size={15} />
-                    <span>Pay ₹{reservation.total_price.toFixed(2)} with Card</span>
+                    <span>Pay ₹{(Number(reservation?.total_price) || 0).toFixed(2)} with Card</span>
                   </button>
                 </form>
               )}

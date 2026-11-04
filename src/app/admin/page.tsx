@@ -913,7 +913,7 @@ export default function AdminDashboardPage() {
                       <p className="font-bold text-slate-900 dark:text-white">{shop.name}</p>
                       <p className="text-slate-600 dark:text-gray-300 font-medium">{shop.address}</p>
                       <p className="text-[11px] text-slate-500 font-mono pt-1">
-                        GPS: {shop.latitude.toFixed(5)}, {shop.longitude.toFixed(5)}
+                        GPS: {(Number(shop?.latitude) || 0).toFixed(5)}, {(Number(shop?.longitude) || 0).toFixed(5)}
                       </p>
                     </div>
 

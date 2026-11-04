@@ -56,6 +56,10 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
       throw new ApiError(res.status, parsedBody, message);
     }
 
+    if (!isJson && typeof parsedBody === "string" && (parsedBody.trim().startsWith("<!DOCTYPE") || parsedBody.trim().startsWith("<html"))) {
+      throw new ApiError(404, null, "Endpoint returned HTML page instead of API response.");
+    }
+
     return parsedBody as T;
   } catch (err: any) {
     clearTimeout(timeoutId);

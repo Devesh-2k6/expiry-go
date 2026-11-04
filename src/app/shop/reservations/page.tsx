@@ -203,7 +203,7 @@ export default function ShopReservations() {
                     <img src={res.product.front_image_url} alt={res.product.name} className="w-16 h-16 rounded-xl object-cover bg-gray-100 border border-gray-200/50" />
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-white text-sm">{res.product.name}</h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-semibold">Qty: {res.quantity} | Total: <span className="font-bold text-emerald-600">₹{res.total_price.toFixed(2)}</span></p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-semibold">Qty: {res.quantity} | Total: <span className="font-bold text-emerald-600">₹{(Number(res.total_price) || 0).toFixed(2)}</span></p>
                       <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-1"><Clock size={10}/> Reserved {new Date(res.created_at).toLocaleString()}</p>
                     </div>
                   </div>
@@ -270,7 +270,7 @@ export default function ShopReservations() {
                         <img src={order.product.front_image_url} alt="" className="w-14 h-14 rounded-2xl object-cover bg-gray-50 border border-gray-200/50" />
                         <div>
                           <h3 className="font-black text-gray-900 dark:text-white text-sm">{order.product.name}</h3>
-                          <p className="text-xs text-gray-500 mt-0.5">Qty: {order.quantity} | Value: <strong className="text-emerald-600">₹{order.total_price.toFixed(2)}</strong></p>
+                          <p className="text-xs text-gray-500 mt-0.5">Qty: {order.quantity} | Value: <strong className="text-emerald-600">₹{(Number(order.total_price) || 0).toFixed(2)}</strong></p>
                           <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full mt-2 text-white ${order.order_type === 'DELIVERY' ? 'bg-purple-600' : 'bg-blue-600'}`}>
                             {order.order_type === 'DELIVERY' ? <Truck size={10} /> : <ShoppingBag size={10} />}
                             {order.order_type}
@@ -335,7 +335,7 @@ export default function ShopReservations() {
                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${order.status === 'OUT_FOR_DELIVERY' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                               {order.status}
                             </span>
-                            <span className="text-[10px] text-gray-400">Qty: {order.quantity} | ₹{order.total_price.toFixed(2)}</span>
+                            <span className="text-[10px] text-gray-400">Qty: {order.quantity} | ₹{(Number(order.total_price) || 0).toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
@@ -412,7 +412,7 @@ export default function ShopReservations() {
                             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${order.status === 'DELIVERED' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'}`}>
                               {order.status}
                             </span>
-                            <span className="text-[10px] text-gray-400">Qty: {order.quantity} | ₹{order.total_price.toFixed(2)}</span>
+                            <span className="text-[10px] text-gray-400">Qty: {order.quantity} | ₹{(Number(order.total_price) || 0).toFixed(2)}</span>
                           </div>
                         </div>
                       </div>

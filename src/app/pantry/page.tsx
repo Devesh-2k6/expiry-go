@@ -90,13 +90,15 @@ export default function PantryPage() {
   const loadData = useCallback(async () => {
     try {
       const [list, smartAlerts] = await Promise.all([
-        getPantryItems(),
+        getPantryItems().catch(() => []),
         getPantrySmartAlerts().catch(() => []),
       ]);
-      setItems(list);
-      setAlerts(smartAlerts);
+      setItems(Array.isArray(list) ? list : []);
+      setAlerts(Array.isArray(smartAlerts) ? smartAlerts : []);
     } catch (e) {
       console.error("Error loading fridge items:", e);
+      setItems([]);
+      setAlerts([]);
     } finally {
       setLoading(false);
     }
@@ -175,6 +177,9 @@ export default function PantryPage() {
     }
   };
 
+  const safeItems = Array.isArray(items) ? items : [];
+  const safeAlerts = Array.isArray(alerts) ? alerts : [];
+
   return (
     <ShopperLayout>
       <div className="min-h-screen bg-slate-950 text-slate-50 pb-28 pt-6 px-4 sm:px-6 lg:px-8">
@@ -213,16 +218,16 @@ export default function PantryPage() {
         </div>
 
         {/* Smart Alert Banner */}
-        {alerts.length > 0 && (
+        {safeAlerts.length > 0 && safeAlerts[0]?.alert_message && (
           <div className="bg-red-950/40 border border-red-800/60 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="text-red-400 shrink-0 mt-0.5" size={20} />
               <div>
                 <h4 className="text-sm font-bold text-red-200">
-                  {alerts.length} Item(s) Expiring within 24–48 Hours!
+                  {safeAlerts.length} Item(s) Expiring within 24–48 Hours!
                 </h4>
                 <p className="text-xs text-red-300/80 mt-1">
-                  {alerts[0].alert_message}
+                  {safeAlerts[0].alert_message}
                 </p>
               </div>
             </div>
@@ -240,13 +245,13 @@ export default function PantryPage() {
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-200">Fridge & Pantry Inventory</h3>
             <span className="text-xs font-semibold text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
-              {items.length} items
+              {safeItems.length} items
             </span>
           </div>
 
           {loading ? (
             <div className="text-center py-16 text-slate-500 text-sm">Loading your digital fridge...</div>
-          ) : items.length === 0 ? (
+          ) : safeItems.length === 0 ? (
             <div className="text-center py-16 bg-slate-900/30 rounded-2xl border border-slate-800/80 p-8 space-y-4">
               <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mx-auto shadow-inner shadow-purple-500/5">
                 <Refrigerator size={30} />
@@ -266,7 +271,7 @@ export default function PantryPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {items.map((item) => {
+              {safeItems.map((item) => {
                 const isCritical = item.urgency_status === "CRITICAL";
                 const isExpSoon = item.urgency_status === "EXPIRING_SOON";
                 const colorClass = isCritical
@@ -475,7 +480,7 @@ export default function PantryPage() {
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Ingredients Used</h4>
               <div className="space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
-                {recipe.ingredients.map((ing: RecipeIngredientItem, i: number) => (
+                {Array.isArray(recipe.ingredients) && recipe.ingredients.map((ing: RecipeIngredientItem, i: number) => (
                   <div key={i} className="flex justify-between text-xs">
                     <span className="text-slate-200">• {ing.name}</span>
                     <span className="text-slate-400">{ing.quantity}</span>
@@ -487,7 +492,7 @@ export default function PantryPage() {
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">Step-by-Step Instructions</h4>
               <div className="space-y-2.5">
-                {recipe.instructions.map((step: RecipeStep) => (
+                {Array.isArray(recipe.instructions) && recipe.instructions.map((step: RecipeStep) => (
                   <div key={step.step_number} className="flex gap-3 text-xs leading-relaxed">
                     <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center shrink-0">
                       {step.step_number}

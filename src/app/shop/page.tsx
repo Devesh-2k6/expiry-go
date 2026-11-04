@@ -79,10 +79,12 @@ function AnimatedCounter({ value, prefix = "", suffix = "", decimals = 0 }: { va
 
 // Client-side Product Spoilage Risk Classifier
 function getProductRiskStatus(product: any) {
-  const expiryDate = new Date(product.expiry_date);
+  if (!product) return { label: "Healthy Inventory", color: "emerald", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-650 dark:text-emerald-400" };
+  const expiryDate = new Date(product.expiry_date || Date.now());
   const now = new Date();
-  const daysLeft = Math.max(0.1, (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  const qty = product.quantity;
+  const diff = isNaN(expiryDate.getTime()) ? 86400000 * 3 : expiryDate.getTime() - now.getTime();
+  const daysLeft = Math.max(0.1, diff / (1000 * 60 * 60 * 24));
+  const qty = Number(product.quantity) || 1;
 
   if (daysLeft <= 1.5 || (daysLeft <= 3.0 && qty > 10)) {
     return { label: "High Spoilage Risk", color: "red", bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-650 dark:text-red-400" };
@@ -95,12 +97,14 @@ function getProductRiskStatus(product: any) {
 
 // Explainability text generator
 function getExplainabilityReasoning(product: any, forecast: any) {
-  const expiryDate = new Date(product.expiry_date);
+  if (!product) return "Balanced pricing markdown preserves rescue probability.";
+  const expiryDate = new Date(product.expiry_date || Date.now());
   const now = new Date();
-  const daysLeft = Math.max(0.1, (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const diff = isNaN(expiryDate.getTime()) ? 86400000 * 3 : expiryDate.getTime() - now.getTime();
+  const daysLeft = Math.max(0.1, diff / (1000 * 60 * 60 * 24));
   
   if (daysLeft <= 1.5) {
-    return `Low remaining shelf life of ${daysLeft.toFixed(1)} days critical velocity limits increased spoilage risk, necessitating a high markdown.`;
+    return `Low remaining shelf life of ${(Number(daysLeft) || 0).toFixed(1)} days critical velocity limits increased spoilage risk, necessitating a high markdown.`;
   }
   if (product.quantity >= 15) {
     return `High stock volume of ${product.quantity} units increases spoilage risk, and requires a competitive markdown discount to clear inventory.`;
@@ -847,10 +851,10 @@ export default function ShopDashboardOverview() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-gray-900 dark:text-white">
-                          ₹{product.discount_price.toFixed(2)}
+                          ₹{(Number(product.discount_price ?? product.auto_discount_min_price ?? product.original_price) || 0).toFixed(2)}
                         </p>
                         <p className="text-xs text-gray-400 line-through">
-                          ₹{product.original_price.toFixed(2)}
+                          ₹{(Number(product.original_price) || 0).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -1313,14 +1317,14 @@ export default function ShopDashboardOverview() {
                 dynamicInsights.push({
                   type: "danger",
                   title: "High Chance of Spoilage within 24 Hours",
-                  text: `Remaining shelf life is critically low (${daysLeft.toFixed(1)} days). High spoilage hazard detected.`,
+                  text: `Remaining shelf life is critically low (${(Number(daysLeft) || 0).toFixed(1)} days). High spoilage hazard detected.`,
                   action: `AI recommends increasing discount by ${Math.max(10, forecast.optimal_discount_percent - currentDiscountPct)}% immediately.`
                 });
               } else if (forecast.spoilage_risk_score === "Medium") {
                 dynamicInsights.push({
                   type: "warning",
                   title: "Medium Spoilage Risk Alert",
-                  text: `Shelf life is limited (${daysLeft.toFixed(1)} days). Demand velocity is moderate.`,
+                  text: `Shelf life is limited (${(Number(daysLeft) || 0).toFixed(1)} days). Demand velocity is moderate.`,
                   action: `Adjust discount to AI-suggested ${forecast.optimal_discount_percent}% off to maintain clearout.`
                 });
               }
@@ -1491,7 +1495,7 @@ export default function ShopDashboardOverview() {
                         <div className="bg-gray-50 dark:bg-gray-900/60 p-3.5 rounded-2xl border border-gray-100 dark:border-gray-850 hover:border-emerald-500/10 transition">
                           <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Target Price</p>
                           <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                            ₹{forecast.optimal_price.toFixed(2)}
+                            ₹{(Number(forecast.optimal_price) || 0).toFixed(2)}
                           </p>
                         </div>
                       </div>
