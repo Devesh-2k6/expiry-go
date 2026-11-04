@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
-import { getUser, createToken } from "@/lib/server-otp";
+import crypto from "crypto";
+import {
+  ensureStoreLoaded,
+  getUserAsync,
+  getOtpRecord,
+  saveUserAsync,
+  createToken,
+  type StoredUser,
+} from "@/lib/server-otp";
 
 export async function POST(req: Request) {
   try {
@@ -10,6 +18,9 @@ export async function POST(req: Request) {
     if (!email || !password) {
       return NextResponse.json({ detail: "Email and password are required." }, { status: 400 });
     }
+
+    // Always ensure fresh data from persistent cloud store
+    await ensureStoreLoaded();
 
     // Platform Admin check
     if (email === "devpant2006@gmail.com") {
@@ -28,13 +39,45 @@ export async function POST(req: Request) {
       });
     }
 
-    const user = getUser(email);
+    let user = await getUserAsync(email);
+
+    // If user not yet in users table, check if they registered via OTP with matching password
     if (!user) {
-      return NextResponse.json({ detail: "Account not found with this email. Please sign up." }, { status: 401 });
+      const otpRec = getOtpRecord(email);
+      if (otpRec && (otpRec.password === password || otpRec.hashed_password === password)) {
+        user = {
+          id: crypto.randomUUID(),
+          email,
+          name: otpRec.name || email.split("@")[0],
+          role: otpRec.is_vendor ? "VENDOR" : "CUSTOMER",
+          is_shop_owner: Boolean(otpRec.is_vendor),
+          email_verified: true,
+          phone_number: otpRec.phone_number,
+          password_hash: password,
+          created_at: new Date().toISOString(),
+        };
+        await saveUserAsync(user);
+      }
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { detail: "Account not found with this email. Please sign up." },
+        { status: 401 }
+      );
     }
 
     if (user.password_hash && user.password_hash !== password) {
-      return NextResponse.json({ detail: "Invalid password. Please check your credentials." }, { status: 401 });
+      return NextResponse.json(
+        { detail: "Invalid password. Please check your credentials." },
+        { status: 401 }
+      );
+    }
+
+    // Auto-mark email as verified upon successful password entry
+    if (!user.email_verified) {
+      user.email_verified = true;
+      await saveUserAsync(user);
     }
 
     const token = createToken(user.id, user.role);
@@ -59,4 +102,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to log in." }, { status: 500 });
   }
 }
-

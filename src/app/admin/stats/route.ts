@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { getAllShops, getAllUsers, getAllProducts } from "@/lib/server-otp";
+import { ensureStoreLoaded, getAllShopsAsync, getAllUsersAsync, getAllProductsAsync } from "@/lib/server-otp";
 
 export async function GET() {
   try {
-    const shops = getAllShops();
-    const users = getAllUsers();
-    const products = getAllProducts();
+    await ensureStoreLoaded();
+    const shops = await getAllShopsAsync();
+    const users = await getAllUsersAsync();
+    const products = await getAllProductsAsync();
 
     const activeShops = shops.filter((s) => s.approval_status === "APPROVED" && s.is_active).length;
     const pendingShops = shops.filter((s) => s.approval_status === "PENDING").length;
@@ -30,4 +31,3 @@ export async function GET() {
     return NextResponse.json({ detail: err.message || "Failed to fetch admin stats" }, { status: 500 });
   }
 }
-

@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { getAllUsers } from "@/lib/server-otp";
+import { ensureStoreLoaded, getAllUsersAsync } from "@/lib/server-otp";
 
 export async function GET(req: Request) {
   try {
+    await ensureStoreLoaded();
     const { searchParams } = new URL(req.url);
     const search = (searchParams.get("search") || "").trim().toLowerCase();
     const role = searchParams.get("role");
 
-    let users = getAllUsers();
+    let users = await getAllUsersAsync();
     if (role && role !== "ALL") {
       users = users.filter((u) => u.role === role);
     }
@@ -40,4 +41,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to fetch users" }, { status: 500 });
   }
 }
-

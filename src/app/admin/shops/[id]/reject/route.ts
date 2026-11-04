@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
-import { getShopById, saveShop, getUserById } from "@/lib/server-otp";
+import { ensureStoreLoaded, getShopByIdAsync, saveShopAsync, getUserByIdAsync } from "@/lib/server-otp";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await ensureStoreLoaded();
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
     const reason = (body.reason || "").trim() || "Application rejected by administrator.";
 
-    const shop = getShopById(id);
+    const shop = await getShopByIdAsync(id);
     if (!shop) {
       return NextResponse.json({ detail: "Shop not found" }, { status: 404 });
     }
@@ -19,9 +20,9 @@ export async function POST(
     shop.is_active = false;
     shop.rejected_at = new Date().toISOString();
     shop.approval_reason = reason;
-    saveShop(shop);
+    await saveShopAsync(shop);
 
-    const owner = getUserById(shop.owner_id);
+    const owner = await getUserByIdAsync(shop.owner_id);
     const enriched = {
       ...shop,
       owner_name: shop.owner_name || owner?.name || "Merchant",
@@ -34,4 +35,3 @@ export async function POST(
     return NextResponse.json({ detail: err.message || "Failed to reject shop" }, { status: 500 });
   }
 }
-

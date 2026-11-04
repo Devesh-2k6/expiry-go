@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { verifyOtpCode, getUser, saveUser, createToken } from "@/lib/server-otp";
+import {
+  ensureStoreLoaded,
+  verifyOtpCodeAsync,
+  getUserAsync,
+  saveUserAsync,
+  createToken,
+} from "@/lib/server-otp";
 
 export async function POST(req: Request) {
   try {
@@ -16,18 +22,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: "Password must be at least 6 characters." }, { status: 400 });
     }
 
-    const { valid } = verifyOtpCode(email, otp);
+    await ensureStoreLoaded();
+    const { valid } = await verifyOtpCodeAsync(email, otp);
     if (!valid) {
       return NextResponse.json({ detail: "Invalid or expired OTP code." }, { status: 400 });
     }
 
-    const user = getUser(email);
+    const user = await getUserAsync(email);
     if (!user) {
       return NextResponse.json({ detail: "User account not found." }, { status: 404 });
     }
 
     user.password_hash = newPassword;
-    saveUser(user);
+    await saveUserAsync(user);
 
     const token = createToken(user.id, user.role);
 
@@ -53,4 +60,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to reset password." }, { status: 500 });
   }
 }
-

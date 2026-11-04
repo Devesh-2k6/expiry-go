@@ -1,6 +1,17 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { generateOtp, saveOtp, sendSmtpOtp, saveShop, getShopByOwnerId, type StoredShop } from "@/lib/server-otp";
+import {
+  ensureStoreLoaded,
+  generateOtp,
+  saveOtpAsync,
+  sendSmtpOtp,
+  saveShopAsync,
+  getShopByOwnerIdAsync,
+  getUserAsync,
+  saveUserAsync,
+  type StoredShop,
+  type StoredUser,
+} from "@/lib/server-otp";
 
 export async function POST(req: Request) {
   try {
@@ -25,27 +36,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: "Store name is required." }, { status: 400 });
     }
 
-    const code = generateOtp();
-    saveOtp(email, code, {
-      name: shopName,
-      is_vendor: true,
-      hashed_password: password,
-      phone_number: phoneNumber,
-      category,
-      upi_id: upiId,
-      photo_url: photoUrl,
-      document_url: documentUrl,
-      address,
-      latitude,
-      longitude,
-    });
+    // Ensure store is synced from persistent cloud
+    await ensureStoreLoaded();
 
-    // Create or update pending shop immediately so it appears in the Admin review queue
+    // 1. Immediately create or update the StoredUser record
+    const existingUser = await getUserAsync(email);
+    const userId = existingUser?.id || crypto.randomUUID();
+    const user: StoredUser = {
+      id: userId,
+      email,
+      name: shopName,
+      role: "VENDOR",
+      is_shop_owner: true,
+      email_verified: false,
+      phone_number: phoneNumber,
+      password_hash: password || existingUser?.password_hash,
+      created_at: existingUser?.created_at || new Date().toISOString(),
+    };
+    await saveUserAsync(user);
+
+    // 2. Immediately create or update the pending StoredShop
     const ownerPlaceholder = `vendor_${email}`;
-    const existing = getShopByOwnerId(ownerPlaceholder);
+    const existingShop =
+      (await getShopByOwnerIdAsync(userId)) || (await getShopByOwnerIdAsync(ownerPlaceholder));
+
     const shop: StoredShop = {
-      id: existing?.id || crypto.randomUUID(),
-      owner_id: ownerPlaceholder,
+      id: existingShop?.id || crypto.randomUUID(),
+      owner_id: userId,
       name: shopName,
       category,
       owner_name: shopName,
@@ -60,17 +77,35 @@ export async function POST(req: Request) {
       document_url: documentUrl || null,
       verification_document_url: documentUrl || null,
       verification_document_name: "Business License Document",
-      approval_status: existing?.approval_status || "PENDING",
+      approval_status: existingShop?.approval_status || "PENDING",
       approval_reason: null,
       approved_at: null,
       approved_by: null,
       rejected_at: null,
       is_active: false,
       location_verified: true,
-      created_at: existing?.created_at || new Date().toISOString(),
+      created_at: existingShop?.created_at || new Date().toISOString(),
     };
-    saveShop(shop);
+    await saveShopAsync(shop);
 
+    // 3. Save OTP record
+    const code = generateOtp();
+    await saveOtpAsync(email, code, {
+      name: shopName,
+      is_vendor: true,
+      hashed_password: password,
+      password,
+      phone_number: phoneNumber,
+      category,
+      upi_id: upiId,
+      photo_url: photoUrl,
+      document_url: documentUrl,
+      address,
+      latitude,
+      longitude,
+    });
+
+    // 4. Send 6-digit OTP code through Gmail SMTP
     await sendSmtpOtp(email, code, shopName);
 
     return NextResponse.json({
@@ -79,6 +114,9 @@ export async function POST(req: Request) {
       expires_in_seconds: 600,
     });
   } catch (err: any) {
-    return NextResponse.json({ detail: err.message || "Failed to process vendor registration" }, { status: 500 });
+    return NextResponse.json(
+      { detail: err.message || "Failed to process vendor registration" },
+      { status: 500 }
+    );
   }
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateOtp, saveOtp, sendSmtpOtp, getUser } from "@/lib/server-otp";
+import { ensureStoreLoaded, generateOtp, saveOtpAsync, sendSmtpOtp, getUserAsync } from "@/lib/server-otp";
 
 export async function POST(req: Request) {
   try {
@@ -10,10 +10,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: "Email address is required." }, { status: 400 });
     }
 
-    const user = getUser(email);
-    // Proceed regardless to prevent user enumeration
+    await ensureStoreLoaded();
+    const user = await getUserAsync(email);
     const code = generateOtp();
-    saveOtp(email, code);
+    await saveOtpAsync(email, code);
     await sendSmtpOtp(email, code, user?.name);
 
     return NextResponse.json({
@@ -25,4 +25,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to process forgot password" }, { status: 500 });
   }
 }
-

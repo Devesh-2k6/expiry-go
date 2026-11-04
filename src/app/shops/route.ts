@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getAllShops } from "@/lib/server-otp";
+import { ensureStoreLoaded, getAllShopsAsync } from "@/lib/server-otp";
 
 export async function GET() {
   try {
-    const shops = getAllShops();
+    await ensureStoreLoaded();
+    const shops = await getAllShopsAsync();
     return NextResponse.json(shops);
   } catch (err: any) {
     return NextResponse.json([], { status: 200 });
   }
 }
-

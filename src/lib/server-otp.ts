@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { put } from "@vercel/blob";
 
 export type OtpRecord = {
   code: string;
@@ -60,59 +61,214 @@ export type StoredShop = {
   created_at?: string;
 };
 
-// Path for serverless file storage in /tmp
-const STORAGE_FILE = path.join(
-  process.env.TEMP || process.env.TMP || "/tmp",
-  "expirygo_serverless_store.json"
-);
-
-interface StoreData {
+export interface StoreData {
   otps: Record<string, OtpRecord>;
   users: Record<string, StoredUser>;
   shops: Record<string, StoredShop>;
   products: any[];
 }
 
-function loadStore(): StoreData {
+const BLOB_STORE_FILENAME = "expirygo_db_v1.json";
+const BLOB_PUBLIC_URL = "https://ntkd7vsavwreywtx.public.blob.vercel-storage.com/expirygo_db_v1.json";
+const BLOB_TOKEN =
+  process.env.BLOB_READ_WRITE_TOKEN ||
+  "vercel_blob_rw_ntKd7vsAVWrEywtx_ibzEnUJNAegcuyfZhRLRYBHJ4jPyfb";
+
+const STORAGE_FILE = path.join(
+  process.env.TEMP || process.env.TMP || "/tmp",
+  "expirygo_serverless_store.json"
+);
+
+// Built-in baseline verified accounts
+const BASELINE_USERS: Record<string, StoredUser> = {
+  "devpant2006@gmail.com": {
+    id: "admin_devesh_001",
+    email: "devpant2006@gmail.com",
+    name: "Devesh Admin",
+    role: "ADMIN",
+    is_shop_owner: false,
+    email_verified: true,
+    created_at: "2026-11-01T00:00:00.000Z",
+  },
+  "nithiyashagi@gmail.com": {
+    id: "vendor_nithiya_001",
+    email: "nithiyashagi@gmail.com",
+    name: "Nithiya Groceries",
+    role: "VENDOR",
+    is_shop_owner: true,
+    email_verified: true,
+    phone_number: "9876543210",
+    password_hash: "123456",
+    created_at: "2026-11-04T00:00:00.000Z",
+  },
+};
+
+const BASELINE_SHOPS: Record<string, StoredShop> = {
+  shop_nithiya_001: {
+    id: "shop_nithiya_001",
+    owner_id: "vendor_nithiya_001",
+    name: "Nithiya Groceries",
+    category: "grocery",
+    owner_name: "Nithiya Groceries",
+    owner_email: "nithiyashagi@gmail.com",
+    owner_phone: "9876543210",
+    phone_number: "9876543210",
+    address: "Commercial Market, Chennai",
+    latitude: 13.0827,
+    longitude: 80.2707,
+    upi_id: "nithiya@upi",
+    photo_url: "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800",
+    document_url: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800",
+    verification_document_url: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800",
+    verification_document_name: "Business License Document",
+    approval_status: "PENDING",
+    approval_reason: null,
+    approved_at: null,
+    approved_by: null,
+    rejected_at: null,
+    is_active: false,
+    location_verified: true,
+    created_at: "2026-11-04T00:00:00.000Z",
+  },
+};
+
+function ensureBaseline(store: StoreData): void {
+  for (const [email, user] of Object.entries(BASELINE_USERS)) {
+    if (!store.users[email]) {
+      store.users[email] = { ...user };
+    }
+  }
+  for (const [id, shop] of Object.entries(BASELINE_SHOPS)) {
+    if (!store.shops[id]) {
+      store.shops[id] = { ...shop };
+    }
+  }
+  if (!Array.isArray(store.products)) {
+    store.products = [];
+  }
+}
+
+function loadLocalStore(): StoreData {
   try {
     if (fs.existsSync(STORAGE_FILE)) {
       const raw = fs.readFileSync(STORAGE_FILE, "utf-8");
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        const store: StoreData = {
+          otps: parsed.otps || {},
+          users: parsed.users || {},
+          shops: parsed.shops || {},
+          products: Array.isArray(parsed.products) ? parsed.products : [],
+        };
+        ensureBaseline(store);
+        return store;
+      }
     }
   } catch (err) {
-    console.error("Failed to read store file:", err);
+    console.warn("[STORE] Failed to read local store file:", err);
   }
-  return { otps: {}, users: {}, shops: {}, products: [] };
+  const fresh: StoreData = { otps: {}, users: {}, shops: {}, products: [] };
+  ensureBaseline(fresh);
+  return fresh;
 }
 
-function saveStore(data: StoreData): void {
+// Global in-memory cache shared across calls in the same Node.js worker
+const globalStore: StoreData = (global as any).__EXPIRYGO_DATA_STORE || loadLocalStore();
+(global as any).__EXPIRYGO_DATA_STORE = globalStore;
+
+let lastCloudSync = 0;
+const CLOUD_SYNC_INTERVAL_MS = 5000; // re-sync from Vercel Blob at most every 5s
+
+export async function ensureStoreLoaded(): Promise<StoreData> {
+  const now = Date.now();
+  if (now - lastCloudSync < CLOUD_SYNC_INTERVAL_MS && Object.keys(globalStore.users).length > 0) {
+    return globalStore;
+  }
+
+  try {
+    const res = await fetch(`${BLOB_PUBLIC_URL}?t=${now}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" },
+    });
+    if (res.ok) {
+      const cloudData = await res.json();
+      if (cloudData && typeof cloudData === "object") {
+        // Merge cloud data into globalStore
+        globalStore.otps = { ...cloudData.otps, ...globalStore.otps };
+        globalStore.users = { ...cloudData.users, ...globalStore.users };
+        globalStore.shops = { ...cloudData.shops, ...globalStore.shops };
+        if (Array.isArray(cloudData.products)) {
+          globalStore.products = cloudData.products;
+        }
+        ensureBaseline(globalStore);
+        lastCloudSync = now;
+
+        // Cache locally to /tmp
+        try {
+          fs.writeFileSync(STORAGE_FILE, JSON.stringify(globalStore, null, 2), "utf-8");
+        } catch {}
+
+        return globalStore;
+      }
+    }
+  } catch (err) {
+    console.warn("[STORE] Cloud fetch from Vercel Blob failed, falling back to local store:", err);
+  }
+
+  ensureBaseline(globalStore);
+  return globalStore;
+}
+
+export async function saveStoreAsync(data: StoreData): Promise<void> {
+  ensureBaseline(data);
+
+  // 1. Write to local /tmp cache immediately
   try {
     fs.writeFileSync(STORAGE_FILE, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
-    console.error("Failed to write store file:", err);
+    console.warn("[STORE] Local write error:", err);
+  }
+
+  // 2. Commit to persistent Vercel Blob
+  try {
+    await put(BLOB_STORE_FILENAME, JSON.stringify(data, null, 2), {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      token: BLOB_TOKEN,
+    });
+    lastCloudSync = Date.now();
+  } catch (err: any) {
+    console.error("[STORE] Failed to persist store to Vercel Blob:", err.message);
   }
 }
 
-// In-memory global store to share between function invocations
-const globalStore: StoreData = (global as any).__EXPIRYGO_DATA_STORE || loadStore();
-(global as any).__EXPIRYGO_DATA_STORE = globalStore;
+export function saveStore(data: StoreData): void {
+  ensureBaseline(data);
+  try {
+    fs.writeFileSync(STORAGE_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch {}
+  // Fire and forget cloud write
+  void saveStoreAsync(data);
+}
 
 export function generateOtp(): string {
   return String(crypto.randomInt(100000, 999999));
 }
 
-export function saveOtp(
+export async function saveOtpAsync(
   email: string,
   code: string,
   extra?: Partial<OtpRecord>
-): void {
+): Promise<void> {
   const clean = email.trim().toLowerCase();
   globalStore.otps[clean] = {
     code: code.trim(),
-    expires_at: Date.now() + 10 * 60 * 1000, // 10 minutes
+    expires_at: Date.now() + 15 * 60 * 1000, // 15 minutes
     name: extra?.name,
     is_vendor: extra?.is_vendor,
     hashed_password: extra?.hashed_password || extra?.password,
+    password: extra?.password || extra?.hashed_password,
     phone_number: extra?.phone_number,
     category: extra?.category,
     upi_id: extra?.upi_id,
@@ -122,10 +278,29 @@ export function saveOtp(
     latitude: extra?.latitude,
     longitude: extra?.longitude,
   };
+  await saveStoreAsync(globalStore);
+}
+
+export function saveOtp(email: string, code: string, extra?: Partial<OtpRecord>): void {
+  void saveOtpAsync(email, code, extra);
+}
+
+export function getOtpRecord(email: string): OtpRecord | undefined {
+  const clean = email.trim().toLowerCase();
+  return globalStore.otps[clean];
+}
+
+export function deleteOtp(email: string): void {
+  const clean = email.trim().toLowerCase();
+  delete globalStore.otps[clean];
   saveStore(globalStore);
 }
 
-export function verifyOtpCode(email: string, code: string): { valid: boolean; record?: OtpRecord } {
+export async function verifyOtpCodeAsync(
+  email: string,
+  code: string
+): Promise<{ valid: boolean; record?: OtpRecord }> {
+  await ensureStoreLoaded();
   const clean = email.trim().toLowerCase();
   const cleanCode = code.trim();
 
@@ -136,35 +311,94 @@ export function verifyOtpCode(email: string, code: string): { valid: boolean; re
 
   if (Date.now() > record.expires_at) {
     delete globalStore.otps[clean];
-    saveStore(globalStore);
+    await saveStoreAsync(globalStore);
     return { valid: false };
   }
 
-  // Exact OTP match only
+  // Exact OTP match
   if (record.code === cleanCode) {
     delete globalStore.otps[clean];
-    saveStore(globalStore);
+    await saveStoreAsync(globalStore);
     return { valid: true, record };
   }
 
   return { valid: false };
 }
 
+export function verifyOtpCode(email: string, code: string): { valid: boolean; record?: OtpRecord } {
+  const clean = email.trim().toLowerCase();
+  const cleanCode = code.trim();
+  const record = globalStore.otps[clean];
+  if (!record) return { valid: false };
+  if (Date.now() > record.expires_at) {
+    delete globalStore.otps[clean];
+    saveStore(globalStore);
+    return { valid: false };
+  }
+  if (record.code === cleanCode) {
+    delete globalStore.otps[clean];
+    saveStore(globalStore);
+    return { valid: true, record };
+  }
+  return { valid: false };
+}
+
+export async function saveUserAsync(user: StoredUser): Promise<void> {
+  const clean = user.email.trim().toLowerCase();
+  globalStore.users[clean] = user;
+  await saveStoreAsync(globalStore);
+}
+
 export function saveUser(user: StoredUser): void {
-  globalStore.users[user.email.toLowerCase()] = user;
+  const clean = user.email.trim().toLowerCase();
+  globalStore.users[clean] = user;
   saveStore(globalStore);
 }
 
+export async function getUserAsync(email: string): Promise<StoredUser | undefined> {
+  await ensureStoreLoaded();
+  const clean = email.trim().toLowerCase();
+  if (globalStore.users[clean]) {
+    return globalStore.users[clean];
+  }
+  if (BASELINE_USERS[clean]) {
+    return BASELINE_USERS[clean];
+  }
+  return undefined;
+}
+
 export function getUser(email: string): StoredUser | undefined {
-  return globalStore.users[email.trim().toLowerCase()];
+  const clean = email.trim().toLowerCase();
+  return globalStore.users[clean] || BASELINE_USERS[clean];
+}
+
+export async function getUserByIdAsync(id: string): Promise<StoredUser | undefined> {
+  await ensureStoreLoaded();
+  return (
+    Object.values(globalStore.users).find((u) => u.id === id) ||
+    Object.values(BASELINE_USERS).find((u) => u.id === id)
+  );
 }
 
 export function getUserById(id: string): StoredUser | undefined {
-  return Object.values(globalStore.users).find((u) => u.id === id);
+  return (
+    Object.values(globalStore.users).find((u) => u.id === id) ||
+    Object.values(BASELINE_USERS).find((u) => u.id === id)
+  );
+}
+
+export async function getAllUsersAsync(): Promise<StoredUser[]> {
+  await ensureStoreLoaded();
+  return Object.values(globalStore.users);
 }
 
 export function getAllUsers(): StoredUser[] {
   return Object.values(globalStore.users);
+}
+
+export async function saveShopAsync(shop: StoredShop): Promise<void> {
+  globalStore.shops[shop.id] = shop;
+  await saveStoreAsync(globalStore);
 }
 
 export function saveShop(shop: StoredShop): void {
@@ -172,19 +406,50 @@ export function saveShop(shop: StoredShop): void {
   saveStore(globalStore);
 }
 
+export async function getShopByIdAsync(id: string): Promise<StoredShop | undefined> {
+  await ensureStoreLoaded();
+  return (
+    globalStore.shops[id] ||
+    Object.values(globalStore.shops).find((s) => s.id === id || s.owner_id === id) ||
+    BASELINE_SHOPS[id]
+  );
+}
+
 export function getShopById(id: string): StoredShop | undefined {
   return (
     globalStore.shops[id] ||
-    Object.values(globalStore.shops).find((s) => s.id === id || s.owner_id === id)
+    Object.values(globalStore.shops).find((s) => s.id === id || s.owner_id === id) ||
+    BASELINE_SHOPS[id]
+  );
+}
+
+export async function getShopByOwnerIdAsync(ownerId: string): Promise<StoredShop | undefined> {
+  await ensureStoreLoaded();
+  return (
+    Object.values(globalStore.shops).find((s) => s.owner_id === ownerId) ||
+    Object.values(BASELINE_SHOPS).find((s) => s.owner_id === ownerId)
   );
 }
 
 export function getShopByOwnerId(ownerId: string): StoredShop | undefined {
-  return Object.values(globalStore.shops).find((s) => s.owner_id === ownerId);
+  return (
+    Object.values(globalStore.shops).find((s) => s.owner_id === ownerId) ||
+    Object.values(BASELINE_SHOPS).find((s) => s.owner_id === ownerId)
+  );
+}
+
+export async function getAllShopsAsync(): Promise<StoredShop[]> {
+  await ensureStoreLoaded();
+  return Object.values(globalStore.shops);
 }
 
 export function getAllShops(): StoredShop[] {
   return Object.values(globalStore.shops);
+}
+
+export async function deleteShopAsync(id: string): Promise<void> {
+  delete globalStore.shops[id];
+  await saveStoreAsync(globalStore);
 }
 
 export function deleteShop(id: string): void {
@@ -192,13 +457,36 @@ export function deleteShop(id: string): void {
   saveStore(globalStore);
 }
 
+export async function getAllProductsAsync(): Promise<any[]> {
+  await ensureStoreLoaded();
+  return globalStore.products || [];
+}
+
 export function getAllProducts(): any[] {
   return globalStore.products || [];
+}
+
+export async function addProductAsync(prod: any): Promise<void> {
+  if (!globalStore.products) globalStore.products = [];
+  globalStore.products.push(prod);
+  await saveStoreAsync(globalStore);
 }
 
 export function addProduct(prod: any): void {
   if (!globalStore.products) globalStore.products = [];
   globalStore.products.push(prod);
+  saveStore(globalStore);
+}
+
+export async function deleteProductAsync(id: string): Promise<void> {
+  if (!globalStore.products) return;
+  globalStore.products = globalStore.products.filter((p) => p.id !== id);
+  await saveStoreAsync(globalStore);
+}
+
+export function deleteProduct(id: string): void {
+  if (!globalStore.products) return;
+  globalStore.products = globalStore.products.filter((p) => p.id !== id);
   saveStore(globalStore);
 }
 
@@ -266,7 +554,7 @@ export async function sendSmtpOtp(email: string, code: string, name?: string): P
       <div style="background: #faf5ff; border: 2px dashed #d8b4fe; border-radius: 14px; padding: 20px; text-align: center; margin: 24px 0;">
         <span style="font-family: monospace; font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #7c3aed;">${code}</span>
       </div>
-      <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">This code is valid for 10 minutes and is single-use only. Never share this code with anyone.</p>
+      <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">This code is valid for 15 minutes and is single-use only. Never share this code with anyone.</p>
     </div>
     <div style="background: #f1f5f9; padding: 14px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
       &copy; Meeva Surplus Marketplace. All rights reserved.
@@ -279,7 +567,7 @@ export async function sendSmtpOtp(email: string, code: string, name?: string): P
       from: `"Meeva" <${user}>`,
       to: email,
       subject: `🔐 Your Meeva Verification Code: ${code}`,
-      text: `Your verification code is: ${code}. Valid for 10 minutes.`,
+      text: `Your verification code is: ${code}. Valid for 15 minutes.`,
       html,
     });
 

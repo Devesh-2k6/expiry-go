@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyToken, getUserById, getUser } from "@/lib/server-otp";
+import { ensureStoreLoaded, verifyToken, getUserByIdAsync } from "@/lib/server-otp";
 
 export async function GET(req: Request) {
   try {
@@ -26,7 +26,8 @@ export async function GET(req: Request) {
       });
     }
 
-    const user = getUserById(payload.sub);
+    await ensureStoreLoaded();
+    const user = await getUserByIdAsync(payload.sub);
     if (!user) {
       return NextResponse.json({ detail: "User not found" }, { status: 404 });
     }
@@ -47,4 +48,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ detail: err.message || "Failed to retrieve user" }, { status: 500 });
   }
 }
-

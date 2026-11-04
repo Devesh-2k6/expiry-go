@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { getAllProducts, addProduct } from "@/lib/server-otp";
+import { ensureStoreLoaded, getAllProductsAsync, addProductAsync } from "@/lib/server-otp";
 import crypto from "crypto";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const products = getAllProducts();
+    await ensureStoreLoaded();
+    const products = await getAllProductsAsync();
     return NextResponse.json(products);
   } catch (err: any) {
     return NextResponse.json([], { status: 200 });
@@ -13,16 +14,16 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    await ensureStoreLoaded();
     const body = await req.json();
     const newProduct = {
       id: crypto.randomUUID(),
       ...body,
       created_at: new Date().toISOString(),
     };
-    addProduct(newProduct);
+    await addProductAsync(newProduct);
     return NextResponse.json(newProduct, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ detail: err.message || "Failed to create product" }, { status: 500 });
   }
 }
-

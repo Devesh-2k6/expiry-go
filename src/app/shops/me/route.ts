@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { verifyToken, getShopByOwnerId, saveShop } from "@/lib/server-otp";
+import crypto from "crypto";
+import {
+  ensureStoreLoaded,
+  verifyToken,
+  getShopByOwnerIdAsync,
+  saveShopAsync,
+} from "@/lib/server-otp";
 
 export async function GET(req: Request) {
   try {
@@ -15,7 +21,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ detail: "Invalid token" }, { status: 401 });
     }
 
-    const shop = getShopByOwnerId(payload.sub);
+    await ensureStoreLoaded();
+    const shop = await getShopByOwnerIdAsync(payload.sub);
     if (!shop) {
       return NextResponse.json({ detail: "Shop not found" }, { status: 404 });
     }
@@ -40,28 +47,37 @@ export async function PUT(req: Request) {
       return NextResponse.json({ detail: "Invalid token" }, { status: 401 });
     }
 
+    await ensureStoreLoaded();
     const body = await req.json();
-    const existing = getShopByOwnerId(payload.sub) || {
+    const existing = (await getShopByOwnerIdAsync(payload.sub)) || {
       id: crypto.randomUUID(),
       owner_id: payload.sub,
       name: body.name || "My Store",
       address: body.address || "Local Address",
       latitude: body.latitude || 13.0827,
       longitude: body.longitude || 80.2707,
+      category: body.category || "grocery",
+      upi_id: body.upi_id || null,
+      photo_url: body.photo_url || null,
+      document_url: body.document_url || null,
+      verification_document_url: body.document_url || null,
+      verification_document_name: "Business License Document",
       approval_status: "PENDING",
-      is_active: true,
+      is_active: false,
       location_verified: true,
+      created_at: new Date().toISOString(),
     };
 
     const updated = {
       ...existing,
       ...body,
+      id: existing.id,
+      owner_id: payload.sub,
     };
 
-    saveShop(updated);
+    await saveShopAsync(updated);
     return NextResponse.json(updated);
   } catch (err: any) {
     return NextResponse.json({ detail: err.message || "Failed to update shop" }, { status: 500 });
   }
 }
-

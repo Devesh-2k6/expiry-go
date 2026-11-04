@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import {
-  verifyOtpCode,
-  getUser,
-  saveUser,
-  saveShop,
-  getShopByOwnerId,
-  getAllShops,
+  ensureStoreLoaded,
+  verifyOtpCodeAsync,
+  getUserAsync,
+  saveUserAsync,
+  saveShopAsync,
+  getShopByOwnerIdAsync,
+  getAllShopsAsync,
   createToken,
   type StoredUser,
   type StoredShop,
@@ -27,7 +28,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { valid, record } = verifyOtpCode(identifier, otp);
+    await ensureStoreLoaded();
+
+    const { valid, record } = await verifyOtpCodeAsync(identifier, otp);
     if (!valid) {
       return NextResponse.json(
         { detail: "Invalid or expired OTP code. Please request a new code." },
@@ -35,7 +38,7 @@ export async function POST(req: Request) {
       );
     }
 
-    let user = getUser(identifier);
+    let user = await getUserAsync(identifier);
     const isVendor = record?.is_vendor !== undefined ? record.is_vendor : isShopOwner;
     const finalName = record?.name || name || identifier.split("@")[0] || "User";
 
@@ -48,31 +51,33 @@ export async function POST(req: Request) {
         is_shop_owner: isVendor,
         email_verified: true,
         phone_number: record?.phone_number,
-        password_hash: record?.hashed_password,
+        password_hash: record?.hashed_password || record?.password,
         created_at: new Date().toISOString(),
       };
-      saveUser(user);
+      await saveUserAsync(user);
     } else {
       user.email_verified = true;
       if (isVendor && !user.is_shop_owner) {
         user.is_shop_owner = true;
         user.role = "VENDOR";
       }
-      saveUser(user);
+      if (record?.hashed_password || record?.password) {
+        user.password_hash = record.hashed_password || record.password;
+      }
+      await saveUserAsync(user);
     }
 
     if (isVendor) {
-      // Check if pending shop was created during registration
-      const allShops = getAllShops();
+      const allShops = await getAllShopsAsync();
       let existingShop =
-        getShopByOwnerId(user.id) ||
-        getShopByOwnerId(`vendor_${identifier}`) ||
+        (await getShopByOwnerIdAsync(user.id)) ||
+        (await getShopByOwnerIdAsync(`vendor_${identifier}`)) ||
         allShops.find((s) => s.owner_email === identifier);
 
       if (existingShop) {
         existingShop.owner_id = user.id;
         existingShop.owner_name = user.name;
-        saveShop(existingShop);
+        await saveShopAsync(existingShop);
       } else {
         const newShop: StoredShop = {
           id: crypto.randomUUID(),
@@ -100,7 +105,7 @@ export async function POST(req: Request) {
           location_verified: true,
           created_at: new Date().toISOString(),
         };
-        saveShop(newShop);
+        await saveShopAsync(newShop);
       }
     }
 
