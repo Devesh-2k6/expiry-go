@@ -1,11 +1,13 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component, ErrorInfo, ReactNode, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { enableScreens } from "react-native-screens";
+import { Globe } from "lucide-react-native";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { LanguageProvider } from "./src/contexts/LanguageContext";
 import { RootNavigator } from "./src/navigation/RootNavigator";
+import { WebUnifiedView } from "./src/screens/WebUnifiedView";
 import { Colors, Radius, Spacing, Typography } from "./src/theme";
 
 // Initialize optimized native screens
@@ -109,16 +111,56 @@ const errorStyles = StyleSheet.create({
   },
 });
 
+const navStyles = StyleSheet.create({
+  backToWebPill: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 20,
+    right: 16,
+    zIndex: 9999,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#7c3aed",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  backToWebText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+});
+
 export default function App() {
+  const [viewMode, setViewMode] = useState<"web" | "native">("web");
+
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <LanguageProvider>
-          <AuthProvider>
-            <StatusBar style="light" />
-            <RootNavigator />
-          </AuthProvider>
-        </LanguageProvider>
+        <StatusBar style="light" />
+        {viewMode === "web" ? (
+          <WebUnifiedView onSwitchToNative={() => setViewMode("native")} />
+        ) : (
+          <LanguageProvider>
+            <AuthProvider>
+              <RootNavigator />
+              <TouchableOpacity
+                style={navStyles.backToWebPill}
+                onPress={() => setViewMode("web")}
+                activeOpacity={0.85}
+              >
+                <Globe size={13} color="#ffffff" />
+                <Text style={navStyles.backToWebText}>Live Web App</Text>
+              </TouchableOpacity>
+            </AuthProvider>
+          </LanguageProvider>
+        )}
       </ErrorBoundary>
     </SafeAreaProvider>
   );
