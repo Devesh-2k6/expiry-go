@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Bell, LayoutGrid, Store, ShoppingBag, Globe, ScanLine } from "lucide-react-native";
+import { Bell, Store, ShoppingBag, Globe, ScanLine, Leaf } from "lucide-react-native";
 import { Colors, Radius, Shadows, Spacing, Typography } from "../theme";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -16,8 +16,8 @@ interface CustomHeaderProps {
 }
 
 export const CustomHeader: React.FC<CustomHeaderProps> = ({
-  title = "Meeva",
-  subtitle,
+  title = "ExpiryGo",
+  subtitle = "Surplus Rescue Engine",
   onPressNotifications,
   onPressScanner,
   showRoleToggle = true,
@@ -40,16 +40,26 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
     }
   };
 
+  const isDefaultBrand = !title || title === "ExpiryGo";
+
   return (
     <View style={styles.container}>
-      {/* Left Menu / App Icon */}
+      {/* Left Menu / ExpiryGo Leaf Brand Icon */}
       <View style={styles.leftSection}>
-        <View style={styles.gridBtn}>
-          <LayoutGrid size={18} color={Colors.textPrimary} />
+        <View style={styles.logoBadge}>
+          <Leaf size={18} color="#ffffff" />
         </View>
         <View style={styles.titleColumn}>
-          <Text style={styles.brandTitle}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
+          {isDefaultBrand ? (
+            <Text style={styles.brandTitle}>
+              Expiry<Text style={styles.brandAccent}>Go</Text>
+            </Text>
+          ) : (
+            <Text style={styles.brandTitle}>{title}</Text>
+          )}
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle || "Surplus Rescue Engine"}
+          </Text>
         </View>
       </View>
 
@@ -140,33 +150,42 @@ const styles = StyleSheet.create({
   leftSection: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
     flex: 1,
   },
-  gridBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
+  logoBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#7c3aed",
     alignItems: "center",
     justifyContent: "center",
-    ...Shadows.soft,
+    shadowColor: "#7c3aed",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
   },
   titleColumn: {
     justifyContent: "center",
   },
   brandTitle: {
     fontSize: 20,
-    fontWeight: "800",
+    fontWeight: "900",
     color: Colors.textPrimary,
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
+  },
+  brandAccent: {
+    color: "#7c3aed",
+    fontWeight: "900",
   },
   subtitle: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: Colors.textSecondary,
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#7c3aed",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    marginTop: 1,
   },
   rightActions: {
     flexDirection: "row",
@@ -174,9 +193,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   circleBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.card,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -187,8 +206,8 @@ const styles = StyleSheet.create({
   },
   notifDot: {
     position: "absolute",
-    top: 10,
-    right: 11,
+    top: 9,
+    right: 10,
     width: 7,
     height: 7,
     borderRadius: 4,

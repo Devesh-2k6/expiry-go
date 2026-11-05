@@ -35,7 +35,7 @@ export async function getProducts(params: GetProductsParams = {}): Promise<ApiPr
   if (params.radius_km != null) search.set("radius_km", String(params.radius_km));
 
   const qs = search.toString();
-  const path = qs ? `/products/?${qs}` : "/products/";
+  const path = qs ? `/products?${qs}` : "/products";
   return apiRequest<ApiProduct[]>(path);
 }
 
@@ -64,7 +64,7 @@ export async function optimizeProductDetails(
 }
 
 export async function createProduct(product: ApiProductCreate): Promise<ApiProduct> {
-  return apiRequest<ApiProduct>("/products/", {
+  return apiRequest<ApiProduct>("/products", {
     method: "POST",
     json: product,
   });

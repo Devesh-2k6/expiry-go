@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   BackHandler,
   Platform,
-  SafeAreaView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { WebView } from "react-native-webview";
-import { ScanLine, RefreshCw, Smartphone } from "lucide-react-native";
+import { ScanLine, RefreshCw } from "lucide-react-native";
 import { UniversalScannerModal, type ScannedBarcodeResult } from "../components/UniversalScannerModal";
 
 const AnyWebView = WebView as any;
@@ -61,37 +61,8 @@ export const WebUnifiedView: React.FC<WebUnifiedViewProps> = ({ onSwitchToNative
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
-
-      {/* Top Header Pill Bar */}
-      <View style={styles.topBar}>
-        <View style={styles.leftInfo}>
-          <View style={styles.liveDot} />
-          <Text style={styles.liveText}>expirygo.vercel.app</Text>
-        </View>
-
-        <View style={styles.rightActions}>
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={reloadWeb}
-            accessibilityLabel="Refresh"
-          >
-            <RefreshCw size={15} color="#94a3b8" />
-          </TouchableOpacity>
-
-          {onSwitchToNative && (
-            <TouchableOpacity
-              style={styles.switchPill}
-              onPress={onSwitchToNative}
-              accessibilityLabel="Switch to Native UI"
-            >
-              <Smartphone size={13} color="#a855f7" />
-              <Text style={styles.switchPillText}>Native UI</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      <StatusBar style="dark"  />
 
       {/* Main Full-Screen Web App */}
       <View style={styles.webWrap}>
@@ -114,10 +85,13 @@ export const WebUnifiedView: React.FC<WebUnifiedViewProps> = ({ onSwitchToNative
           pullToRefreshEnabled={true}
           sharedCookiesEnabled={true}
           cacheEnabled={true}
+          geolocationEnabled={true}
+          allowsInlineMediaPlayback={true}
+          mediaPlaybackRequiresUserAction={false}
           renderLoading={() => (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="large" color="#7c3aed" />
-              <Text style={styles.loadingText}>Loading ExpiryGo Cloud...</Text>
+              <Text style={styles.loadingText}>Opening ExpiryGo...</Text>
             </View>
           )}
         />
@@ -126,10 +100,11 @@ export const WebUnifiedView: React.FC<WebUnifiedViewProps> = ({ onSwitchToNative
       {/* Floating Bottom Native Barcode Scanner Button */}
       <TouchableOpacity
         style={styles.floatingScanner}
-        activeOpacity={0.85}
+        activeOpacity={0.88}
         onPress={() => setScannerVisible(true)}
+        accessibilityLabel="Scan Product Barcode"
       >
-        <ScanLine size={20} color="#ffffff" />
+        <ScanLine size={19} color="#ffffff" strokeWidth={2.4} />
         <Text style={styles.scannerBtnText}>Scan Product</Text>
       </TouchableOpacity>
 
@@ -147,68 +122,15 @@ export const WebUnifiedView: React.FC<WebUnifiedViewProps> = ({ onSwitchToNative
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#090d16",
-  },
-  topBar: {
-    height: 40,
-    backgroundColor: "#0d1322",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1e293b",
-  },
-  leftInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#10b981",
-  },
-  liveText: {
-    color: "#cbd5e1",
-    fontSize: 12,
-    fontFamily: Platform.OS === "ios" ? "System" : "sans-serif-medium",
-    fontWeight: "700",
-  },
-  rightActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  actionBtn: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: "#1e293b",
-  },
-  switchPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(168, 85, 247, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(168, 85, 247, 0.3)",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-  },
-  switchPillText: {
-    color: "#c084fc",
-    fontSize: 11,
-    fontWeight: "700",
+    backgroundColor: "#FAFAFE",
   },
   webWrap: {
     flex: 1,
-    backgroundColor: "#0B0F19",
+    backgroundColor: "#FAFAFE",
   },
   webview: {
     flex: 1,
-    backgroundColor: "#0B0F19",
+    backgroundColor: "#FAFAFE",
   },
   loadingOverlay: {
     position: "absolute",
@@ -216,34 +138,35 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: "#0B0F19",
+    backgroundColor: "#FAFAFE",
     justifyContent: "center",
     alignItems: "center",
     gap: 12,
   },
   loadingText: {
-    color: "#94a3b8",
-    fontSize: 13,
-    fontWeight: "600",
+    color: "#6D28D9",
+    fontSize: 14,
+    fontWeight: "700",
   },
   floatingScanner: {
     position: "absolute",
-    bottom: 24,
-    right: 20,
+    bottom: Platform.OS === "ios" ? 30 : 22,
+    right: 18,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 7,
     backgroundColor: "#7c3aed",
     paddingVertical: 12,
     paddingHorizontal: 18,
-    borderRadius: 28,
+    borderRadius: 30,
     shadowColor: "#7c3aed",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.45,
     shadowRadius: 10,
     elevation: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.35)",
+    zIndex: 9999,
   },
   scannerBtnText: {
     color: "#ffffff",
