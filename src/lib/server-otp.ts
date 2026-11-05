@@ -84,7 +84,7 @@ const STORAGE_FILE = path.join(
   "expirygo_serverless_store.json"
 );
 
-// Built-in baseline verified accounts
+// Built-in baseline verified accounts (Admin only - zero pre-created vendors or customers)
 const BASELINE_USERS: Record<string, StoredUser> = {
   "devpant2006@gmail.com": {
     id: "admin_devesh_001",
@@ -95,47 +95,9 @@ const BASELINE_USERS: Record<string, StoredUser> = {
     email_verified: true,
     created_at: "2026-11-01T00:00:00.000Z",
   },
-  "nithiyashagi@gmail.com": {
-    id: "vendor_nithiya_001",
-    email: "nithiyashagi@gmail.com",
-    name: "Nithiya Groceries",
-    role: "VENDOR",
-    is_shop_owner: true,
-    email_verified: true,
-    phone_number: "9876543210",
-    password_hash: "123456",
-    created_at: "2026-11-04T00:00:00.000Z",
-  },
 };
 
-const BASELINE_SHOPS: Record<string, StoredShop> = {
-  shop_nithiya_001: {
-    id: "shop_nithiya_001",
-    owner_id: "vendor_nithiya_001",
-    name: "Nithiya Groceries",
-    category: "grocery",
-    owner_name: "Nithiya Groceries",
-    owner_email: "nithiyashagi@gmail.com",
-    owner_phone: "9876543210",
-    phone_number: "9876543210",
-    address: "Commercial Market, Chennai",
-    latitude: 13.0827,
-    longitude: 80.2707,
-    upi_id: "nithiya@upi",
-    photo_url: "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800",
-    document_url: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800",
-    verification_document_url: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800",
-    verification_document_name: "Business License Document",
-    approval_status: "PENDING",
-    approval_reason: null,
-    approved_at: null,
-    approved_by: null,
-    rejected_at: null,
-    is_active: false,
-    location_verified: true,
-    created_at: "2026-11-04T00:00:00.000Z",
-  },
-};
+const BASELINE_SHOPS: Record<string, StoredShop> = {};
 
 function ensureBaseline(store: StoreData): void {
   for (const [email, user] of Object.entries(BASELINE_USERS)) {
