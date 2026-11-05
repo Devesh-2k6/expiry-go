@@ -192,7 +192,7 @@ const globalStore: StoreData = (global as any).__EXPIRYGO_DATA_STORE || loadLoca
 (global as any).__EXPIRYGO_DATA_STORE = globalStore;
 
 let lastCloudSync = 0;
-const CLOUD_SYNC_INTERVAL_MS = 5000; // re-sync from Vercel Blob at most every 5s
+const CLOUD_SYNC_INTERVAL_MS = 2000; // re-sync from Vercel Blob at most every 2s
 
 export async function ensureStoreLoaded(): Promise<StoreData> {
   const now = Date.now();
@@ -492,13 +492,13 @@ export function getAllProducts(): any[] {
 
 export async function addProductAsync(prod: any): Promise<void> {
   if (!globalStore.products) globalStore.products = [];
-  globalStore.products.push(prod);
+  globalStore.products.unshift(prod);
   await saveStoreAsync(globalStore);
 }
 
 export function addProduct(prod: any): void {
   if (!globalStore.products) globalStore.products = [];
-  globalStore.products.push(prod);
+  globalStore.products.unshift(prod);
   saveStore(globalStore);
 }
 

@@ -139,7 +139,7 @@ export const DealsFeedScreen: React.FC<DealsFeedScreenProps> = ({ navigation }) 
         if (!query.trim() && !recipeMode) {
           fetchDeals();
         }
-      }, 4000);
+      }, 3000);
 
       return () => clearInterval(interval);
     }, [fetchDeals, loadFavorites, query, recipeMode])
