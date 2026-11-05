@@ -1,11 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Smartphone, QrCode } from "lucide-react";
 import { MobileConnectModal } from "./MobileConnectModal";
 
 export function MobileAppFloatingButton() {
   const [isOpen, setIsOpen] = useState(false);
+  const [hideInApp, setHideInApp] = useState(false);
+
+  useEffect(() => {
+    // Hide inside ReactNative WebView or mobile app environments
+    if (
+      typeof window !== "undefined" &&
+      ((window as any).ReactNativeWebView ||
+        navigator.userAgent.includes("wv") ||
+        window.location.search.includes("app=true"))
+    ) {
+      setHideInApp(true);
+    }
+  }, []);
+
+  if (hideInApp) return null;
 
   return (
     <>

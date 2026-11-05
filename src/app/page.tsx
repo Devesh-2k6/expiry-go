@@ -42,6 +42,7 @@ import { getProducts } from "@/services/products";
 import type { ApiProduct } from "@/types/product";
 import { getSafeImageUrl } from "@/lib/images";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthenticationContext";
 
 // Dynamically import client components
 const HeroMap = dynamic(() => import('@/components/map/HeroMap'), { ssr: false });
@@ -49,6 +50,7 @@ const HeroMap = dynamic(() => import('@/components/map/HeroMap'), { ssr: false }
 
 export default function Home() {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
   const [heroSearch, setHeroSearch] = useState("");
   const [locationText, setLocationText] = useState("Chennai, Tamil Nadu");
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -201,19 +203,19 @@ export default function Home() {
       </div>
 
       {/* ── CRISP WHITE GLASSMORPHIC HEADER ── */}
-      <header className="pt-4 md:pt-6 px-4 sm:px-6 lg:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto sticky top-0 z-50">
-        <nav className="bg-white/90 backdrop-blur-2xl border border-purple-100/90 rounded-2xl px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-[0_10px_35px_rgba(124,58,237,0.06)] transition-all duration-300">
+      <header className="pt-3 sm:pt-4 md:pt-6 px-3 sm:px-6 lg:px-8 max-w-7xl 2xl:max-w-[1440px] mx-auto sticky top-0 z-50">
+        <nav className="bg-white/95 backdrop-blur-2xl border border-purple-100/90 rounded-2xl px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between shadow-[0_10px_35px_rgba(124,58,237,0.06)] transition-all duration-300">
           
           {/* Logo */}
-          <Link href="/" onClick={playPopSound} className="flex items-center gap-3 group cursor-pointer">
-            <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-violet-700 p-2.5 rounded-2xl text-white group-hover:scale-105 transition-transform shadow-md shadow-purple-600/25">
-              <Leaf size={22} className="fill-white" />
+          <Link href="/" onClick={playPopSound} className="flex items-center gap-2 sm:gap-3 group cursor-pointer shrink-0">
+            <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-violet-700 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl text-white group-hover:scale-105 transition-transform shadow-md shadow-purple-600/25">
+              <Leaf size={18} className="fill-white sm:w-[22px] sm:h-[22px]" />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-black tracking-tight text-slate-900 leading-none">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 leading-none">
                 Expiry<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Go</span>
               </span>
-              <span className="text-[10px] font-extrabold text-purple-700/80 uppercase tracking-widest leading-none mt-0.5">
+              <span className="text-[9px] sm:text-[10px] font-extrabold text-purple-700/80 uppercase tracking-widest leading-none mt-0.5">
                 Surplus Rescue Engine
               </span>
             </div>
@@ -240,17 +242,34 @@ export default function Home() {
           </div>
 
           {/* Header Action Buttons */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <MagneticButton>
-              <Link href="/auth?tab=login" onClick={playPopSound} className="text-xs sm:text-sm font-bold text-purple-700 px-3.5 sm:px-5 py-2 sm:py-2.5 border border-purple-200/80 rounded-xl hover:bg-purple-50/80 hover:border-purple-300 transition-all duration-300 cursor-pointer bg-white shadow-2xs">
-                Sign in
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {isAuthenticated && user ? (
+              <Link
+                href={user.role === 'ADMIN' ? '/admin' : user.role === 'SHOP_OWNER' ? '/shop' : '/deals'}
+                onClick={playPopSound}
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs sm:text-sm font-bold hover:bg-purple-100 transition whitespace-nowrap shadow-2xs"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{user.name?.split(' ')[0] || 'Account'}</span>
               </Link>
-            </MagneticButton>
-            <MagneticButton>
-              <Link href="/auth?tab=signup" onClick={playPopSound} className="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-700 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl hover:from-purple-500 hover:to-indigo-500 hover:shadow-[0_6px_20px_rgba(124,58,237,0.35)] transition-all duration-300 cursor-pointer">
-                Get Started
-              </Link>
-            </MagneticButton>
+            ) : (
+              <>
+                <Link
+                  href="/auth?tab=login"
+                  onClick={playPopSound}
+                  className="text-xs sm:text-sm font-bold text-purple-700 px-2.5 sm:px-5 py-1.5 sm:py-2.5 border border-purple-200/80 rounded-xl hover:bg-purple-50/80 hover:border-purple-300 transition-all duration-300 cursor-pointer bg-white shadow-2xs whitespace-nowrap"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/auth?tab=signup"
+                  onClick={playPopSound}
+                  className="text-xs sm:text-sm font-black text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-700 px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-xl hover:from-purple-500 hover:to-indigo-500 hover:shadow-[0_6px_20px_rgba(124,58,237,0.35)] transition-all duration-300 cursor-pointer whitespace-nowrap"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </header>

@@ -15,7 +15,7 @@ import { ScanLine, RefreshCw } from "lucide-react-native";
 import { UniversalScannerModal, type ScannedBarcodeResult } from "../components/UniversalScannerModal";
 
 const AnyWebView = WebView as any;
-const WEB_URL = "https://expirygo.vercel.app";
+const WEB_URL = "https://expirygo.vercel.app?app=true";
 
 interface WebUnifiedViewProps {
   onSwitchToNative?: () => void;
