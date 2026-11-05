@@ -32,7 +32,16 @@ export function getPublicApiBaseUrl(): string {
       // Storage access blocked / SSR
     }
 
-    // 2. On Vercel deployments, always use same-origin relative endpoints
+    // 2. Check explicitly configured environment variable NEXT_PUBLIC_API_URL
+    const rawEnv = process.env.NEXT_PUBLIC_API_URL?.trim();
+    if (rawEnv && rawEnv !== "" && rawEnv !== "undefined") {
+      const cleanEnv = stripTrailingSlash(rawEnv);
+      if (!cleanEnv.includes("trycloudflare.com") && !cleanEnv.includes("loca.lt")) {
+        return cleanEnv;
+      }
+    }
+
+    // 3. On Vercel deployments, use same-origin relative endpoints
     if (hostname.endsWith(".vercel.app") || hostname === "expirygo.vercel.app") {
       return "";
     }

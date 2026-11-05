@@ -64,8 +64,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const handleSaveApiUrl = async () => {
     if (apiUrl.trim()) {
       await setApiBaseUrl(apiUrl.trim());
-      Alert.alert("API URL Updated", "Backend server address has been saved.");
+      const testRes = await testApiConnection(apiUrl.trim());
+      if (testRes.success) {
+        Alert.alert("API URL Updated ⚡", `Backend server connected successfully!\nLatency: ${testRes.latencyMs}ms`);
+      } else {
+        Alert.alert("API URL Saved (Warning)", `Saved ${apiUrl.trim()} but could not connect:\n${testRes.message}`);
+      }
       setEditingApi(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    const res = await testApiConnection(apiUrl);
+    if (res.success) {
+      Alert.alert("Connection Successful ⚡", `Successfully connected to backend server!\nLatency: ${res.latencyMs}ms`);
+    } else {
+      Alert.alert("Connection Failed ⚠️", `Could not reach ${apiUrl}\nReason: ${res.message}\n\nMake sure your computer and phone are on the same Wi-Fi network and backend is running.`);
     }
   };
 
@@ -301,9 +315,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
           </View>
         ) : (
-          <TouchableOpacity style={styles.editApiBtn} onPress={() => setEditingApi(true)}>
-            <Text style={styles.editApiText}>Change Backend Server URL</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+            <TouchableOpacity style={styles.editApiBtn} onPress={() => setEditingApi(true)}>
+              <Text style={styles.editApiText}>Change API URL</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.editApiBtn} onPress={handleTestConnection}>
+              <Text style={[styles.editApiText, { color: Colors.emerald }]}>⚡ Test Connection</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
