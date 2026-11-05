@@ -32,3 +32,4 @@ export async function uploadFileToBlobOrBase64(
     filename: file.name,
   };
 }
+

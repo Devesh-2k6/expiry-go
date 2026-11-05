@@ -60,3 +60,4 @@ export async function compressImageFile(file: File, maxWidth = 1200, quality = 0
     reader.readAsDataURL(file);
   });
 }
+
