@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { WebView } from "react-native-webview";
+const AnyWebView = WebView as any;
 import * as Location from "expo-location";
 import {
   MapPin,
@@ -556,7 +557,7 @@ export const MobileLocationPicker: React.FC<MobileLocationPickerProps> = ({
 
       {/* Embedded Live Leaflet Map Canvas */}
       <View style={styles.mapCanvasWrapper}>
-        <WebView
+        <AnyWebView
           key={`loc-picker-${lat.toFixed(4)}-${lng.toFixed(4)}-${mapLayerType}`}
           ref={webViewRef}
           originWhitelist={["*"]}

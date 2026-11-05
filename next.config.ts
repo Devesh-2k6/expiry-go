@@ -48,12 +48,36 @@ const nextConfig: NextConfig = {
         destination: "/api/reservations/:id/checkout",
       },
       {
+        source: "/reservations",
+        destination: "/api/reservations",
+      },
+      {
         source: "/orders/me",
         destination: "/api/orders/me",
       },
       {
         source: "/shops/orders",
         destination: "/api/shops/orders",
+      },
+      {
+        source: "/orders",
+        destination: "/api/orders",
+      },
+      {
+        source: "/orders/:id",
+        destination: "/api/orders/:id",
+      },
+      {
+        source: "/products/recipe-generator",
+        destination: "/api/products/recipe-generator",
+      },
+      {
+        source: "/pantry/smart-alerts",
+        destination: "/api/pantry/smart-alerts",
+      },
+      {
+        source: "/pantry/recipe-from-fridge",
+        destination: "/api/pantry/recipe-from-fridge",
       },
     ];
   },

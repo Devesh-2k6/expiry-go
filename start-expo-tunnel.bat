@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
-title Meeva - Expo Go Tunnel Launcher
+title ExpiryGo - Expo Go Tunnel Launcher
 echo ============================================================
-echo   🚀 MEEVA - EXPO GO TUNNEL LAUNCHER (WORLDWIDE ACCESS)
+echo   🚀 EXPIRYGO - EXPO GO TUNNEL LAUNCHER (WORLDWIDE ACCESS)
 echo ============================================================
 echo.
 echo   This mode uses a secure tunnel so your phone can connect

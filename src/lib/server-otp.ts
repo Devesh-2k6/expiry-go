@@ -68,6 +68,7 @@ export interface StoreData {
   products: any[];
   reservations?: any[];
   orders?: any[];
+  pantry?: any[];
 }
 
 const BLOB_STORE_FILENAME = "expirygo_db_v1.json";
@@ -154,6 +155,9 @@ function ensureBaseline(store: StoreData): void {
   if (!Array.isArray(store.orders)) {
     store.orders = [];
   }
+  if (!Array.isArray(store.pantry)) {
+    store.pantry = [];
+  }
 }
 
 function loadLocalStore(): StoreData {
@@ -169,6 +173,7 @@ function loadLocalStore(): StoreData {
           products: Array.isArray(parsed.products) ? parsed.products : [],
           reservations: Array.isArray(parsed.reservations) ? parsed.reservations : [],
           orders: Array.isArray(parsed.orders) ? parsed.orders : [],
+          pantry: Array.isArray(parsed.pantry) ? parsed.pantry : [],
         };
         ensureBaseline(store);
         return store;
@@ -177,7 +182,7 @@ function loadLocalStore(): StoreData {
   } catch (err) {
     console.warn("[STORE] Failed to read local store file:", err);
   }
-  const fresh: StoreData = { otps: {}, users: {}, shops: {}, products: [], reservations: [], orders: [] };
+  const fresh: StoreData = { otps: {}, users: {}, shops: {}, products: [], reservations: [], orders: [], pantry: [] };
   ensureBaseline(fresh);
   return fresh;
 }
@@ -215,6 +220,9 @@ export async function ensureStoreLoaded(): Promise<StoreData> {
         }
         if (Array.isArray(cloudData.orders)) {
           globalStore.orders = cloudData.orders;
+        }
+        if (Array.isArray(cloudData.pantry)) {
+          globalStore.pantry = cloudData.pantry;
         }
         ensureBaseline(globalStore);
         lastCloudSync = now;
@@ -556,6 +564,71 @@ export async function updateOrderAsync(id: string, updates: any): Promise<any | 
   globalStore.orders[idx] = { ...globalStore.orders[idx], ...updates };
   await saveStoreAsync(globalStore);
   return globalStore.orders[idx];
+}
+
+export function computePantryItemStats(raw: any): any {
+  const now = Date.now();
+  const exp = raw.expiry_date ? new Date(raw.expiry_date).getTime() : now + 86400000 * 3;
+  const diffMs = exp - now;
+  const totalSeconds = diffMs / 1000;
+  const hoursLeft = Math.max(0, Math.round((totalSeconds / 3600) * 10) / 10);
+  const daysLeft = Math.floor(hoursLeft / 24);
+
+  let urgency: "FRESH" | "EXPIRING_SOON" | "CRITICAL" | "EXPIRED" = "FRESH";
+  if (totalSeconds <= 0) {
+    urgency = "EXPIRED";
+  } else if (hoursLeft <= 24) {
+    urgency = "CRITICAL";
+  } else if (hoursLeft <= 72) {
+    urgency = "EXPIRING_SOON";
+  }
+
+  return {
+    ...raw,
+    days_left: daysLeft,
+    hours_left: hoursLeft,
+    urgency_status: urgency,
+  };
+}
+
+export async function getAllPantryItemsAsync(userId?: string): Promise<any[]> {
+  await ensureStoreLoaded();
+  let items = globalStore.pantry || [];
+  if (userId) {
+    items = items.filter((p) => p.user_id === userId);
+  }
+  return items.map(computePantryItemStats);
+}
+
+export async function addPantryItemAsync(item: any): Promise<any> {
+  await ensureStoreLoaded();
+  if (!globalStore.pantry) globalStore.pantry = [];
+  const processed = computePantryItemStats(item);
+  globalStore.pantry.unshift(processed);
+  await saveStoreAsync(globalStore);
+  return processed;
+}
+
+export async function updatePantryItemAsync(id: string, updates: any): Promise<any | null> {
+  await ensureStoreLoaded();
+  if (!globalStore.pantry) globalStore.pantry = [];
+  const idx = globalStore.pantry.findIndex((p) => p.id === id);
+  if (idx === -1) return null;
+  globalStore.pantry[idx] = computePantryItemStats({ ...globalStore.pantry[idx], ...updates });
+  await saveStoreAsync(globalStore);
+  return globalStore.pantry[idx];
+}
+
+export async function deletePantryItemAsync(id: string): Promise<boolean> {
+  await ensureStoreLoaded();
+  if (!globalStore.pantry) globalStore.pantry = [];
+  const initialLen = globalStore.pantry.length;
+  globalStore.pantry = globalStore.pantry.filter((p) => p.id !== id);
+  if (globalStore.pantry.length !== initialLen) {
+    await saveStoreAsync(globalStore);
+    return true;
+  }
+  return false;
 }
 
 export function createToken(userId: string, role: string = "CUSTOMER"): string {

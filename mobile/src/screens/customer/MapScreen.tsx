@@ -13,6 +13,7 @@ import {
   Image,
 } from "react-native";
 import { WebView } from "react-native-webview";
+const AnyWebView = WebView as any;
 import * as Location from "expo-location";
 import {
   MapPin,
@@ -545,7 +546,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
             <Text style={styles.loaderText}>Loading live GPS map & stores...</Text>
           </View>
         ) : (
-          <WebView
+          <AnyWebView
             key={`map-${selectedRadius}-${selectedShop?.id}-${radiusFilteredShops.length}-${userLocation.lat}-${mapLayerType}`}
             ref={webViewRef}
             originWhitelist={["*"]}

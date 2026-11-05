@@ -58,42 +58,93 @@ export type ApiPantryAiScanResponse = {
 };
 
 export async function getPantryItems(includeConsumed = false): Promise<ApiPantryItem[]> {
-  const url = includeConsumed ? "/pantry/?include_consumed=true" : "/pantry/";
-  return apiRequest<ApiPantryItem[]>(url);
+  const query = includeConsumed ? "?include_consumed=true" : "";
+  try {
+    const res = await apiRequest<ApiPantryItem[]>(`/api/pantry${query}`);
+    if (Array.isArray(res)) return res;
+  } catch {
+    // Try FastAPI path
+    try {
+      const fallback = await apiRequest<ApiPantryItem[]>(`/pantry/${query}`);
+      if (Array.isArray(fallback)) return fallback;
+    } catch {}
+  }
+  return [];
 }
 
 export async function addPantryItem(data: ApiPantryCreate): Promise<ApiPantryItem> {
-  return apiRequest<ApiPantryItem>("/pantry/", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  try {
+    return await apiRequest<ApiPantryItem>("/api/pantry", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  } catch {
+    return await apiRequest<ApiPantryItem>("/pantry/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export async function autoImportFromReservation(reservationId: string): Promise<ApiPantryItem> {
-  return apiRequest<ApiPantryItem>(`/pantry/auto-import/${reservationId}`, {
-    method: "POST",
-  });
+  try {
+    return await apiRequest<ApiPantryItem>(`/api/pantry/auto-import/${reservationId}`, {
+      method: "POST",
+    });
+  } catch {
+    return await apiRequest<ApiPantryItem>(`/pantry/auto-import/${reservationId}`, {
+      method: "POST",
+    });
+  }
 }
 
 export async function getPantrySmartAlerts(): Promise<ApiPantrySmartAlert[]> {
-  return apiRequest<ApiPantrySmartAlert[]>("/pantry/smart-alerts");
+  try {
+    const res = await apiRequest<ApiPantrySmartAlert[]>("/api/pantry/smart-alerts");
+    if (Array.isArray(res)) return res;
+  } catch {
+    try {
+      const fallback = await apiRequest<ApiPantrySmartAlert[]>("/pantry/smart-alerts");
+      if (Array.isArray(fallback)) return fallback;
+    } catch {}
+  }
+  return [];
 }
 
 export async function generateRecipeFromFridge(): Promise<ApiRecipeResponse> {
-  return apiRequest<ApiRecipeResponse>("/pantry/recipe-from-fridge", {
-    method: "POST",
-  });
+  try {
+    return await apiRequest<ApiRecipeResponse>("/api/pantry/recipe-from-fridge", {
+      method: "POST",
+    });
+  } catch {
+    return await apiRequest<ApiRecipeResponse>("/pantry/recipe-from-fridge", {
+      method: "POST",
+    });
+  }
 }
 
 export async function updatePantryItem(itemId: string, data: ApiPantryUpdate): Promise<ApiPantryItem> {
-  return apiRequest<ApiPantryItem>(`/pantry/${itemId}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
+  try {
+    return await apiRequest<ApiPantryItem>(`/api/pantry/${itemId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  } catch {
+    return await apiRequest<ApiPantryItem>(`/pantry/${itemId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export async function deletePantryItem(itemId: string): Promise<{ message: string }> {
-  return apiRequest<{ message: string }>(`/pantry/${itemId}`, {
-    method: "DELETE",
-  });
+  try {
+    return await apiRequest<{ message: string }>(`/api/pantry/${itemId}`, {
+      method: "DELETE",
+    });
+  } catch {
+    return await apiRequest<{ message: string }>(`/pantry/${itemId}`, {
+      method: "DELETE",
+    });
+  }
 }

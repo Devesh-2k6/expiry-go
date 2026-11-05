@@ -57,6 +57,7 @@ import {
   setApiBaseUrl,
   resetApiBaseUrl,
   testApiConnection,
+  LIVE_PRODUCTION_URL,
   LAN_API_URL,
   TUNNEL_API_URL,
   CURRENT_LAN_IP,
@@ -145,7 +146,11 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
 
   useEffect(() => {
     async function initUrl() {
-      const url = await getApiBaseUrl();
+      let url = await getApiBaseUrl();
+      if (!url || url.includes(":8000") || url.includes("192.168.") || url.includes("172.23.")) {
+        url = LIVE_PRODUCTION_URL;
+        await resetApiBaseUrl();
+      }
       setCurrentApiUrl(url);
       setCustomIp(url);
     }
@@ -1524,6 +1529,17 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
 
             <View style={styles.presetContainer}>
               <TouchableOpacity
+                style={[styles.presetBtn, (customIp.includes("vercel.app") || customIp === LIVE_PRODUCTION_URL) && styles.presetBtnActive]}
+                onPress={() => {
+                  setCustomIp(LIVE_PRODUCTION_URL);
+                  handleTestConnection(LIVE_PRODUCTION_URL);
+                }}
+              >
+                <Text style={styles.presetTitle}>🚀 Live Web Sync (Production)</Text>
+                <Text style={styles.presetSub} numberOfLines={1}>{LIVE_PRODUCTION_URL}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
                 style={[styles.presetBtn, customIp.includes(CURRENT_LAN_IP) && styles.presetBtnActive]}
                 onPress={() => {
                   setCustomIp(LAN_API_URL);
@@ -1532,17 +1548,6 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
               >
                 <Text style={styles.presetTitle}>📶 Local Wi-Fi LAN</Text>
                 <Text style={styles.presetSub} numberOfLines={1}>{LAN_API_URL}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.presetBtn, customIp.includes("loca.lt") && styles.presetBtnActive]}
-                onPress={() => {
-                  setCustomIp(TUNNEL_API_URL);
-                  handleTestConnection(TUNNEL_API_URL);
-                }}
-              >
-                <Text style={styles.presetTitle}>🌐 Cloud Tunnel</Text>
-                <Text style={styles.presetSub} numberOfLines={1}>{TUNNEL_API_URL}</Text>
               </TouchableOpacity>
             </View>
 
@@ -1553,7 +1558,7 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
                   style={styles.textInput}
                   value={customIp}
                   onChangeText={setCustomIp}
-                  placeholder="http://192.168.1.X:8000"
+                  placeholder="https://expirygo.vercel.app"
                   placeholderTextColor={Colors.textMuted}
                   autoCapitalize="none"
                 />

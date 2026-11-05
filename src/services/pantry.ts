@@ -131,6 +131,16 @@ function saveStoredItems(items: ApiPantryItem[]) {
 }
 
 export async function getPantryItems(includeConsumed = false): Promise<ApiPantryItem[]> {
+  const query = includeConsumed ? "?include_consumed=true" : "";
+  try {
+    const res = await apiRequest<ApiPantryItem[]>(`/api/pantry${query}`);
+    if (Array.isArray(res)) {
+      saveStoredItems(res.map(serializeItem));
+      return res.map(serializeItem);
+    }
+  } catch (e) {
+    console.warn("[PANTRY SYNC] Using offline fridge cache:", e);
+  }
   const local = getStoredItems();
   const filtered = includeConsumed ? local : local.filter((i) => !i.is_consumed);
   filtered.sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
@@ -138,28 +148,53 @@ export async function getPantryItems(includeConsumed = false): Promise<ApiPantry
 }
 
 export async function addPantryItem(data: ApiPantryCreate): Promise<ApiPantryItem> {
+  let createdItem: ApiPantryItem | null = null;
+  try {
+    const res = await apiRequest<ApiPantryItem>("/api/pantry", {
+      method: "POST",
+      json: data,
+    });
+    if (res && res.id) {
+      createdItem = serializeItem(res);
+    }
+  } catch (e) {
+    console.warn("[PANTRY API] Failed to add item online, caching locally:", e);
+  }
+
+  if (!createdItem) {
+    createdItem = serializeItem({
+      id: "item_" + Math.random().toString(36).slice(2, 11),
+      name: data.name,
+      category: data.category,
+      quantity: data.quantity,
+      expiry_date: data.expiry_date,
+      image_url: data.image_url,
+      notes: data.notes,
+      is_consumed: false,
+      purchase_date: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    });
+  }
+
   const all = getStoredItems();
-  const newItem = serializeItem({
-    id: "item_" + Math.random().toString(36).slice(2, 11),
-    name: data.name,
-    category: data.category,
-    quantity: data.quantity,
-    expiry_date: data.expiry_date,
-    image_url: data.image_url,
-    notes: data.notes,
-    is_consumed: false,
-    purchase_date: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-  });
-  all.unshift(newItem);
+  all.unshift(createdItem);
   saveStoredItems(all);
-  return newItem;
+  return createdItem;
 }
 
 export async function updatePantryItem(
   itemId: string,
   data: ApiPantryUpdate
 ): Promise<ApiPantryItem> {
+  try {
+    await apiRequest<ApiPantryItem>(`/api/pantry/${itemId}`, {
+      method: "PUT",
+      json: data,
+    });
+  } catch (e) {
+    console.warn("[PANTRY API] Update online failed, applying locally:", e);
+  }
+
   const all = getStoredItems();
   const idx = all.findIndex((i) => i.id === itemId);
   if (idx !== -1) {
@@ -175,6 +210,14 @@ export async function updatePantryItem(
 }
 
 export async function deletePantryItem(itemId: string): Promise<{ message: string }> {
+  try {
+    await apiRequest<{ message: string }>(`/api/pantry/${itemId}`, {
+      method: "DELETE",
+    });
+  } catch (e) {
+    console.warn("[PANTRY API] Delete online failed, removing locally:", e);
+  }
+
   const all = getStoredItems();
   const filtered = all.filter((i) => i.id !== itemId);
   saveStoredItems(filtered);

@@ -1,3 +1,4 @@
+import { findWorldEasiestRecipe } from "../lib/recipes/engine";
 import { apiRequest } from "../api/client";
 import type {
   ApiProduct,
@@ -220,8 +221,22 @@ export async function getDeepSearchResults(
 export async function generateRecipe(
   products: Array<{ name: string; category: string; quantity?: number }>
 ): Promise<ApiRecipeResponse> {
-  return apiRequest<ApiRecipeResponse>("/products/recipe-generator", {
-    method: "POST",
-    json: { products },
-  });
+  try {
+    const res = await apiRequest<ApiRecipeResponse>("/api/products/recipe-generator", {
+      method: "POST",
+      json: { products },
+    });
+    if (res && res.recipe_name && Array.isArray(res.ingredients) && Array.isArray(res.instructions)) {
+      return res;
+    }
+  } catch {
+    try {
+      const fallbackRes = await apiRequest<ApiRecipeResponse>("/products/recipe-generator", {
+        method: "POST",
+        json: { products },
+      });
+      if (fallbackRes && fallbackRes.recipe_name) return fallbackRes;
+    } catch {}
+  }
+  return findWorldEasiestRecipe(products);
 }

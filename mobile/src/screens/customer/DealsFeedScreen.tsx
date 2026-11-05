@@ -303,7 +303,7 @@ export const DealsFeedScreen: React.FC<DealsFeedScreenProps> = ({ navigation }) 
                   </TouchableOpacity>
                 </View>
               </>
-            ) : null
+            ) : undefined
           }
           renderItem={({ item }) => (
             <DealCard

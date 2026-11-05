@@ -83,10 +83,12 @@ export const DigitalFridgeScreen: React.FC<{ navigation: any }> = ({ navigation 
         getPantryItems(),
         getPantrySmartAlerts().catch(() => []),
       ]);
-      setItems(pantryList);
-      setAlerts(smartAlerts);
+      setItems(Array.isArray(pantryList) ? pantryList : []);
+      setAlerts(Array.isArray(smartAlerts) ? smartAlerts : []);
     } catch (err) {
       console.log("Error loading fridge data:", err);
+      setItems([]);
+      setAlerts([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -151,7 +153,7 @@ export const DigitalFridgeScreen: React.FC<{ navigation: any }> = ({ navigation 
   };
 
   const handleGenerateRecipe = async () => {
-    if (items.length === 0) {
+    if (safeItems.length === 0) {
       Alert.alert("Fridge Empty", "Add some items or scan your kitchen to generate recipes!");
       return;
     }
@@ -227,6 +229,9 @@ export const DigitalFridgeScreen: React.FC<{ navigation: any }> = ({ navigation 
     );
   };
 
+  const safeItems = Array.isArray(items) ? items : [];
+  const safeAlerts = Array.isArray(alerts) ? alerts : [];
+
   return (
     <View style={styles.container}>
       <CustomHeader
@@ -249,16 +254,16 @@ export const DigitalFridgeScreen: React.FC<{ navigation: any }> = ({ navigation 
         }
       >
         {/* Smart AI Alert Banner */}
-        {alerts.length > 0 && (
+        {safeAlerts.length > 0 && (
           <View style={styles.alertBanner}>
             <View style={styles.alertHeader}>
               <AlertTriangle size={18} color="#ef4444" />
               <Text style={styles.alertTitle}>
-                {alerts.length} Item(s) Expiring in 24–48 Hours!
+                {safeAlerts.length} Item(s) Expiring in 24–48 Hours!
               </Text>
             </View>
             <Text style={styles.alertMsg}>
-              {alerts[0].alert_message}
+              {safeAlerts[0].alert_message}
             </Text>
             <TouchableOpacity
               style={styles.alertActionBtn}
@@ -313,17 +318,17 @@ export const DigitalFridgeScreen: React.FC<{ navigation: any }> = ({ navigation 
         {/* Inventory List Header */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Fridge & Pantry Inventory</Text>
-          <Text style={styles.itemCountBadge}>{items.length} items</Text>
+          <Text style={styles.itemCountBadge}>{safeItems.length} items</Text>
         </View>
 
         {loading ? (
           <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
-        ) : items.length === 0 ? (
+        ) : safeItems.length === 0 ? (
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyEmoji}>🧊</Text>
             <Text style={styles.emptyTitle}>Your Digital Fridge is Empty</Text>
             <Text style={styles.emptySubtitle}>
-              Items you reserve on Meeva, scan from your kitchen, or add manually will automatically track their expiration timers here!
+              Items you reserve on ExpiryGo, scan from your kitchen, or add manually will automatically track their expiration timers here!
             </Text>
             <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
               <TouchableOpacity
@@ -343,7 +348,7 @@ export const DigitalFridgeScreen: React.FC<{ navigation: any }> = ({ navigation 
             </View>
           </View>
         ) : (
-          items.map((item) => (
+          safeItems.map((item) => (
             <View key={item.id}>
               {renderItem({ item })}
             </View>

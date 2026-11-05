@@ -5,18 +5,26 @@ export async function createReservation(
   productId: string,
   quantity: number
 ): Promise<ApiReservation> {
-  return apiRequest<ApiReservation>("/reservations/", {
+  return apiRequest<ApiReservation>("/api/reservations", {
     method: "POST",
     json: { product_id: productId, quantity },
   });
 }
 
 export async function getMyReservations(): Promise<ApiReservation[]> {
-  return apiRequest<ApiReservation[]>("/reservations/me");
+  try {
+    return await apiRequest<ApiReservation[]>("/api/reservations/me");
+  } catch {
+    return [];
+  }
 }
 
 export async function getShopReservations(): Promise<ApiReservation[]> {
-  return apiRequest<ApiReservation[]>("/shops/reservations");
+  try {
+    return await apiRequest<ApiReservation[]>("/api/shops/reservations");
+  } catch {
+    return [];
+  }
 }
 
 export async function verifyReservation(
@@ -24,7 +32,7 @@ export async function verifyReservation(
   pickupCode: string
 ): Promise<{ message: string; status: string }> {
   return apiRequest<{ message: string; status: string }>(
-    `/reservations/${reservationId}/verify`,
+    `/api/reservations/${reservationId}/verify`,
     {
       method: "POST",
       json: { pickup_code: pickupCode },
@@ -36,7 +44,7 @@ export async function checkoutReservation(
   reservationId: string
 ): Promise<{ message: string; payment_status: string }> {
   return apiRequest<{ message: string; payment_status: string }>(
-    `/reservations/${reservationId}/checkout`,
+    `/api/reservations/${reservationId}/checkout`,
     {
       method: "POST",
     }

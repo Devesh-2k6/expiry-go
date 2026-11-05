@@ -70,13 +70,15 @@ if "%ACTION%"=="" (
     echo   [2] Build Release AAB  - Google Play Console Store Release (bundleRelease)
     echo   [3] Generate Release Keystore (for Play Store production signing)
     echo   [4] Clean Gradle Project (clean)
+    echo   [5] Build Fast Debug APK - Instant installable APK without signing (assembleDebug)
     echo.
-    set /p "CHOICE=Enter choice [1-4, default 1]: "
+    set /p "CHOICE=Enter choice [1-5, default 1]: "
     if "!CHOICE!"=="" set "CHOICE=1"
     if "!CHOICE!"=="1" set "ACTION=apk"
     if "!CHOICE!"=="2" set "ACTION=aab"
     if "!CHOICE!"=="3" set "ACTION=keystore"
     if "!CHOICE!"=="4" set "ACTION=clean"
+    if "!CHOICE!"=="5" set "ACTION=debug"
 )
 
 :: Handle Keystore generation
@@ -182,6 +184,42 @@ if /i "%ACTION%"=="aab" (
         echo.
         if exist "mobile\android\app\build\outputs\bundle\release\app-release.aab" (
             explorer /select,"mobile\android\app\build\outputs\bundle\release\app-release.aab"
+        )
+    ) else (
+        echo ======================================================================
+        echo   BUILD FAILED (Exit Code !BUILD_STATUS!)
+        echo ======================================================================
+        echo Check the Gradle error messages above.
+    )
+    pause
+    exit /b !BUILD_STATUS!
+)
+
+:: Handle Debug APK Build
+if /i "%ACTION%"=="debug" (
+    echo.
+    echo ======================================================================
+    echo   Building Installable Debug APK (assembleDebug)
+    echo ======================================================================
+    echo Starting Gradle build...
+    echo.
+    
+    cd mobile\android
+    call gradlew.bat assembleDebug
+    set "BUILD_STATUS=!errorlevel!"
+    cd ..\..
+    
+    echo.
+    if !BUILD_STATUS! equ 0 (
+        echo ======================================================================
+        echo   BUILD SUCCESSFUL! 🎉
+        echo ======================================================================
+        echo.
+        echo Your standalone installable APK is ready:
+        echo   mobile\android\app\build\outputs\apk\debug\app-debug.apk
+        echo.
+        if exist "mobile\android\app\build\outputs\apk\debug\app-debug.apk" (
+            explorer /select,"mobile\android\app\build\outputs\apk\debug\app-debug.apk"
         )
     ) else (
         echo ======================================================================

@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
-title Meeva - Expo Go Scanner Launcher
+title ExpiryGo - Expo Go Scanner Launcher
 echo ============================================================
-echo   📱 MEEVA - EXPO GO SCANNER & MOBILE APP LAUNCHER
+echo   📱 EXPIRYGO - EXPO GO SCANNER & MOBILE APP LAUNCHER
 echo ============================================================
 echo.
 

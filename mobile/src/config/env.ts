@@ -1,88 +1,31 @@
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
 
 export const API_OVERRIDE_KEY = "EXPIRYGO_MOBILE_API_OVERRIDE";
 
-export const CURRENT_LAN_IP = "172.23.27.186";
+export const LIVE_PRODUCTION_URL = "https://expirygo.vercel.app";
+export const CURRENT_LAN_IP = "10.88.239.184";
 export const LAN_API_URL = `http://${CURRENT_LAN_IP}:8000`;
-export const TUNNEL_API_URL = "https://william-keep-transcription-ctrl.trycloudflare.com";
+export const TUNNEL_API_URL = "https://expirygo.vercel.app";
 
 /**
- * Returns the default API URL depending on the platform:
- * - Expo Web on localhost: http://localhost:8000
- * - Expo Web on LAN IP: http://<LAN_IP>:8000
- * - Real Device / Expo Go: Auto-resolves machine IP or defaults to local Wi-Fi IP (10.43.177.184:8000)
- * - Android Emulator: 10.0.2.2:8000
- * - iOS Simulator / Local: localhost:8000
+ * Returns the default API URL:
+ * Connected directly to the live production server (https://expirygo.vercel.app)
+ * ensuring Web and Mobile apps are 100% synchronized in real time.
  */
 export function getDefaultApiBaseUrl(): string {
-  // 0. Build-time environment variable (EAS / Production builds)
   if (process.env.EXPO_PUBLIC_API_URL && process.env.EXPO_PUBLIC_API_URL.trim()) {
-    return process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/+$/, '');
+    return process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/+$/, "");
   }
-  // 1. If running in Web browser (Expo Web / React Native Web)
+
   if (Platform.OS === "web" && typeof window !== "undefined") {
     const hostname = window.location.hostname;
-    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
-    const port = window.location.port;
-
-    if (port === "8000") {
-      return `${protocol}//${hostname}:8000`;
-    }
-    if (hostname === "localhost" || hostname === "127.0.0.1") {
-      return "http://localhost:8000";
-    }
-    if (/^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname)) {
-      return `${protocol}//${hostname}:8000`;
-    }
-    if (
-      hostname.endsWith(".trycloudflare.com") ||
-      hostname.endsWith(".loca.lt") ||
-      hostname.endsWith(".ngrok-free.app") ||
-      hostname.endsWith(".ngrok.io") ||
-      hostname.endsWith(".vercel.app") ||
-      hostname.endsWith(".railway.app") ||
-      hostname.endsWith(".onrender.com") ||
-      port === "" ||
-      port === "80" ||
-      port === "443"
-    ) {
+    if (hostname.endsWith(".vercel.app") || hostname === "expirygo.vercel.app") {
       return window.location.origin;
     }
-    return `${protocol}//${hostname}:8000`;
   }
 
-  // 2. Try extracting host IP from various Expo Constants locations across SDK versions
-  const hostUri =
-    Constants.expoConfig?.hostUri ||
-    (Constants as any).expoGoConfig?.debuggerHost ||
-    (Constants as any).manifest2?.extra?.expoClient?.hostUri ||
-    (Constants as any).manifest?.debuggerHost;
-
-  if (hostUri && typeof hostUri === "string") {
-    const hostIp = hostUri.split(":")[0];
-    if (hostIp && hostIp !== "localhost" && hostIp !== "127.0.0.1" && !hostIp.includes("exp.direct")) {
-      return `http://${hostIp}:8000`;
-    }
-  }
-
-  // 3. Try parsing from linkingUri (e.g., "exp://10.43.177.184:8081" or "http://10.43.177.184:8081")
-  if (Constants.linkingUri && typeof Constants.linkingUri === "string") {
-    try {
-      const match = Constants.linkingUri.match(/^[a-zA-Z]+:\/\/([^:/]+)/);
-      if (match && match[1] && match[1] !== "localhost" && match[1] !== "127.0.0.1" && !match[1].includes("exp.direct")) {
-        return `http://${match[1]}:8000`;
-      }
-    } catch {}
-  }
-
-  // 4. For physical mobile devices on Expo Go / Wi-Fi: use current laptop Wi-Fi IP
-  if (Platform.OS === "android" || Platform.OS === "ios") {
-    return LAN_API_URL;
-  }
-
-  return "http://localhost:8000";
+  return LIVE_PRODUCTION_URL;
 }
 
 export async function getWebSocketUrl(): Promise<string> {
@@ -97,6 +40,18 @@ export async function getApiBaseUrl(): Promise<string> {
     const override = await AsyncStorage.getItem(API_OVERRIDE_KEY);
     if (override && override.trim()) {
       const clean = override.trim().replace(/\/+$/, "");
+      // Clean up stale local port 8000 or dead tunnel overrides
+      if (
+        clean.includes(":8000") ||
+        clean.includes("192.168.") ||
+        clean.includes("172.23.") ||
+        clean.includes("loca.lt") ||
+        clean.includes("trycloudflare.com")
+      ) {
+        await AsyncStorage.removeItem(API_OVERRIDE_KEY);
+        cachedBaseUrl = null;
+        return LIVE_PRODUCTION_URL;
+      }
       return clean;
     }
   } catch {
@@ -125,7 +80,7 @@ export async function testApiConnection(
   const url = targetUrl ? targetUrl.trim().replace(/\/+$/, "") : await getApiBaseUrl();
   const startTime = Date.now();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4000);
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
 
   try {
     const res = await fetch(`${url}/health`, {
@@ -141,9 +96,8 @@ export async function testApiConnection(
   } catch (err: any) {
     clearTimeout(timeoutId);
     if (err.name === "AbortError") {
-      return { success: false, message: "Connection timed out (4s)" };
+      return { success: false, message: "Connection timed out (6s)" };
     }
     return { success: false, message: err.message || "Failed to reach server" };
   }
 }
-
