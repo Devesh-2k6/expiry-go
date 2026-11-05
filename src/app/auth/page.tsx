@@ -1,3 +1,4 @@
+import { compressImageFile } from "@/lib/compress-client";
 "use client";
 
 import { FormEvent, useEffect, useState, ChangeEvent } from "react";
@@ -237,14 +238,12 @@ export default function AuthPage() {
     setUploadingPhoto(true);
     setError("");
     try {
-      const res = await uploadAuthFile(file);
+      const compressed = await compressImageFile(file);
+      const res = await uploadAuthFile(compressed);
       setVendorPhotoUrl(res.url);
-    } catch {
-      // Local preview fallback if backend is offline
-      try {
-        const localUrl = URL.createObjectURL(file);
-        setVendorPhotoUrl(localUrl);
-      } catch {}
+    } catch (uploadErr) {
+      console.warn("[UPLOAD NOTICE] Cloud upload failed, using fallback:", uploadErr);
+      setVendorPhotoUrl("https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800");
     } finally {
       setUploadingPhoto(false);
     }
@@ -256,13 +255,12 @@ export default function AuthPage() {
     setUploadingDoc(true);
     setError("");
     try {
-      const res = await uploadAuthFile(file);
+      const compressed = file.type.startsWith("image/") ? await compressImageFile(file) : file;
+      const res = await uploadAuthFile(compressed);
       setVendorDocUrl(res.url);
-    } catch {
-      try {
-        const localUrl = URL.createObjectURL(file);
-        setVendorDocUrl(localUrl);
-      } catch {}
+    } catch (uploadErr) {
+      console.warn("[UPLOAD NOTICE] Document upload failed, using fallback:", uploadErr);
+      setVendorDocUrl("https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800");
     } finally {
       setUploadingDoc(false);
     }
@@ -427,8 +425,8 @@ export default function AuthPage() {
             phone_number: vendorPhone.trim(),
             upi_id: vendorUpiId.trim() || undefined,
             password: vendorPassword.trim(),
-            photo_url: vendorPhotoUrl || "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800",
-            document_url: vendorDocUrl || "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800",
+            photo_url: (!vendorPhotoUrl || vendorPhotoUrl.startsWith("blob:") || vendorPhotoUrl.length > 50000) ? "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800" : vendorPhotoUrl,
+            document_url: (!vendorDocUrl || vendorDocUrl.startsWith("blob:") || vendorDocUrl.length > 50000) ? "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800" : vendorDocUrl,
             address: vendorAddress.trim() || undefined,
             latitude: vendorLat,
             longitude: vendorLng,

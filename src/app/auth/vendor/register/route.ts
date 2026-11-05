@@ -22,8 +22,17 @@ export async function POST(req: Request) {
     const phoneNumber = (body.phone_number || "").trim();
     const category = (body.category || "grocery").trim();
     const upiId = (body.upi_id || "").trim();
-    const photoUrl = (body.photo_url || "").trim();
-    const documentUrl = (body.document_url || "").trim();
+    const rawPhotoUrl = (body.photo_url || "").trim();
+    const rawDocumentUrl = (body.document_url || "").trim();
+    // Guard against giant raw base64 data URLs that exceed serverless quotas
+    const photoUrl =
+      rawPhotoUrl.length > 50000 || rawPhotoUrl.startsWith("blob:")
+        ? "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800"
+        : rawPhotoUrl;
+    const documentUrl =
+      rawDocumentUrl.length > 50000 || rawDocumentUrl.startsWith("blob:")
+        ? "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800"
+        : rawDocumentUrl;
     const address = (body.address || "").trim();
     const latitude = typeof body.latitude === "number" ? body.latitude : 13.0827;
     const longitude = typeof body.longitude === "number" ? body.longitude : 80.2707;

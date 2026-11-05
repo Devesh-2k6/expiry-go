@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { uploadFileToBlobOrBase64 } from "@/lib/blob-upload";
 
 export async function POST(req: Request) {
   try {
@@ -8,13 +9,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: "No file provided" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString("base64");
-    const mime = file.type || "application/pdf";
+    const result = await uploadFileToBlobOrBase64(file, "shop_licenses");
     return NextResponse.json({
-      document_url: `data:${mime};base64,${base64}`,
-      filename: file.name,
+      document_url: result.url,
+      filename: result.filename,
     });
   } catch (err: any) {
     return NextResponse.json({ detail: err.message || "Failed to process document" }, { status: 500 });
