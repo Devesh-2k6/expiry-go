@@ -1,6 +1,6 @@
-import { compressImageFile } from "@/lib/compress-client";
 "use client";
 
+import { compressImageFile } from "@/lib/compress-client";
 import { FormEvent, useEffect, useState, ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
