@@ -336,7 +336,8 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
     setOtpStatusMsg(null);
     setOtpCode("");
     try {
-      const res = await sendOtp(idToSend);
+      const intent = (otpSourceTab === "signup" || tab === "signup") ? "register" : "login";
+      const res = await sendOtp(idToSend, undefined, roleMode, intent);
       setOtpIdentifier(idToSend);
       setOtpCooldown(res.expires_in_seconds || 60);
       setTab("otp");
@@ -364,12 +365,15 @@ export const LoginScreen: React.FC<AuthScreenProps> = ({ navigation, route }) =>
     try {
       const isVendorMode = roleMode === "vendor";
       const nameToSend = isVendorMode ? vendorShopName.trim() : customerName.trim();
+      const intent = (otpSourceTab === "signup" || tab === "signup") ? "register" : "login";
       const res = await verifyOtp({
         identifier: otpIdentifier.trim().toLowerCase(),
         otp: otpCode.trim(),
         name: nameToSend || undefined,
         is_shop_owner: isVendorMode,
         phone_number: isVendorMode ? vendorPhone.trim() : undefined,
+        role: roleMode,
+        intent,
       });
       await loginWithSession(res, isVendorMode ? "shop" : "customer");
     } catch (err: any) {

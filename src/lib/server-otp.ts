@@ -9,6 +9,8 @@ export type OtpRecord = {
   expires_at: number;
   name?: string;
   is_vendor?: boolean;
+  role?: string;
+  intent?: string;
   hashed_password?: string;
   password?: string;
   phone_number?: string;

@@ -301,7 +301,8 @@ export default function AuthPage() {
     setOtpStatusMsg(null);
     setOtpCode("");
     try {
-      await sendOtp(idToSend);
+      const intent = (otpSourceTab === "signup" || tab === "signup") ? "register" : "login";
+      await sendOtp(idToSend, undefined, roleMode, intent);
       setOtpIdentifier(idToSend);
       setOtpSent(true);
       setOtpCooldown(60);
@@ -329,11 +330,14 @@ export default function AuthPage() {
     try {
       const isVendorMode = roleMode === "vendor";
       const nameToSend = isVendorMode ? vendorShopName.trim() : customerName.trim();
+      const intent = (otpSourceTab === "signup" || tab === "signup") ? "register" : "login";
       const res = await verifyOtp(
         otpIdentifier.trim(),
         otpCode.trim(),
         nameToSend || undefined,
-        isVendorMode
+        isVendorMode,
+        roleMode,
+        intent
       );
       
       const actualRole = res.user.role === "ADMIN" ? "admin" : (res.user.role === "VENDOR" || res.user.is_shop_owner) ? "vendor" : "customer";

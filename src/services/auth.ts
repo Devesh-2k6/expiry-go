@@ -162,10 +162,20 @@ export type SendOtpResponse = {
   dev_code?: string;
 };
 
-export async function sendOtp(identifier: string, name?: string): Promise<SendOtpResponse> {
+export async function sendOtp(
+  identifier: string,
+  name?: string,
+  role?: string,
+  intent: "login" | "register" = "login"
+): Promise<SendOtpResponse> {
   return apiRequest<SendOtpResponse>("/auth/send-otp", {
     method: "POST",
-    json: { identifier: identifier.trim().toLowerCase(), name: name?.trim() },
+    json: {
+      identifier: identifier.trim().toLowerCase(),
+      name: name?.trim(),
+      role: role?.toLowerCase(),
+      intent,
+    },
     skipAuth: true,
   });
 }
@@ -174,7 +184,9 @@ export async function verifyOtp(
   identifier: string,
   otp: string,
   name?: string,
-  is_shop_owner: boolean = false
+  is_shop_owner: boolean = false,
+  role?: string,
+  intent: "login" | "register" = "login"
 ): Promise<AuthResponse> {
   return apiRequest<AuthResponse>("/auth/verify-otp", {
     method: "POST",
@@ -183,6 +195,8 @@ export async function verifyOtp(
       otp: otp.trim(),
       name: name?.trim(),
       is_shop_owner,
+      role: role?.toLowerCase(),
+      intent,
     },
     skipAuth: true,
   });

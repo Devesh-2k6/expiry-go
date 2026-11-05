@@ -74,6 +74,48 @@ export async function POST(req: Request) {
       );
     }
 
+    const requestedRole = (body.role || "").trim().toLowerCase();
+    const isVendorAccount =
+      user.role === "VENDOR" ||
+      Boolean(user.is_shop_owner);
+
+    if (requestedRole === "vendor" || requestedRole === "shop_owner") {
+      if (!isVendorAccount) {
+        return NextResponse.json(
+          {
+            detail: `"${email}" is registered as a Customer account, not a Vendor. Please switch to Customer to sign in, or register your store under Sign Up.`,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    if (requestedRole === "customer") {
+      if (isVendorAccount) {
+        return NextResponse.json(
+          {
+            detail: `"${email}" is registered as a Vendor account. Please switch to Vendor to sign in to your merchant portal.`,
+          },
+          { status: 403 }
+        );
+      }
+      if (user.role === "ADMIN") {
+        return NextResponse.json(
+          {
+            detail: `"${email}" is an Admin account. Please switch to Admin to sign in.`,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    if (requestedRole === "admin" && user.role !== "ADMIN") {
+      return NextResponse.json(
+        { detail: "This account does not have Admin privileges." },
+        { status: 403 }
+      );
+    }
+
     // Auto-mark email as verified upon successful password entry
     if (!user.email_verified) {
       user.email_verified = true;

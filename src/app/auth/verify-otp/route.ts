@@ -19,6 +19,7 @@ export async function POST(req: Request) {
     const identifier = (body.identifier || "").trim().toLowerCase();
     const otp = (body.otp || "").trim();
     const name = (body.name || "").trim();
+    const role = (body.role || "").trim().toLowerCase();
     const isShopOwner = Boolean(body.is_shop_owner);
 
     if (!identifier || !otp) {
@@ -38,7 +39,90 @@ export async function POST(req: Request) {
       );
     }
 
+    const intent = (body.intent || record?.intent || "login").trim().toLowerCase();
     let user = await getUserAsync(identifier);
+
+    // ── 1. SIGN IN FLOW (Strict Security: No Account Creation, Strict Role Check) ──
+    if (intent === "login") {
+      if (!user) {
+        return NextResponse.json(
+          {
+            detail: `No account found with email "${identifier}". Fake account creation is blocked during Sign In. Please sign up first.`,
+          },
+          { status: 404 }
+        );
+      }
+
+      const isVendorAccount =
+        user.role === "VENDOR" ||
+        Boolean(user.is_shop_owner);
+      const isAdminAccount = user.role === "ADMIN";
+
+      // Role mismatch check:
+      if (role === "vendor" || role === "shop_owner") {
+        if (!isVendorAccount) {
+          return NextResponse.json(
+            {
+              detail: `"${identifier}" is registered as a Customer, not a Vendor. Please sign in as a Customer, or register your store under Sign Up.`,
+            },
+            { status: 403 }
+          );
+        }
+      }
+
+      if (role === "customer") {
+        if (isVendorAccount) {
+          return NextResponse.json(
+            {
+              detail: `"${identifier}" is registered as a Vendor account. Please sign in as a Vendor to access your merchant portal.`,
+            },
+            { status: 403 }
+          );
+        }
+        if (isAdminAccount) {
+          return NextResponse.json(
+            {
+              detail: `"${identifier}" is an Admin account. Please sign in as Admin.`,
+            },
+            { status: 403 }
+          );
+        }
+      }
+
+      if (role === "admin" && !isAdminAccount) {
+        return NextResponse.json(
+          {
+            detail: "This account does not have Admin privileges.",
+          },
+          { status: 403 }
+        );
+      }
+
+      // Mark verified upon successful login
+      user.email_verified = true;
+      await saveUserAsync(user);
+
+      const token = createToken(user.id, user.role);
+
+      return NextResponse.json({
+        access_token: token,
+        token_type: "bearer",
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          is_shop_owner: user.is_shop_owner,
+          email_verified: true,
+          phone_number: user.phone_number,
+          total_money_saved: 0,
+          total_items_saved: 0,
+          co2_saved_kg: 0,
+        },
+      });
+    }
+
+    // ── 2. SIGN UP / REGISTRATION FLOW ONLY ──
     const isVendor = record?.is_vendor !== undefined ? record.is_vendor : isShopOwner;
     const finalName = record?.name || name || identifier.split("@")[0] || "User";
 
