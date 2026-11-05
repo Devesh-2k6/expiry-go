@@ -29,7 +29,7 @@ import {
 } from "lucide-react-native";
 import { Colors, Radius, Spacing, Typography, Shadows } from "../../theme";
 import { useAuth } from "../../contexts/AuthContext";
-import { getApiBaseUrl, setApiBaseUrl, resetApiBaseUrl } from "../../config/env";
+import { getApiBaseUrl, setApiBaseUrl, resetApiBaseUrl, testApiConnection } from "../../config/env";
 import { getFavorites } from "../../services/products";
 import { instantVerifyEmail, resendVerification } from "../../services/auth";
 import type { ApiFavorite } from "../../types";
@@ -320,7 +320,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <Text style={styles.editApiText}>Change API URL</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.editApiBtn} onPress={handleTestConnection}>
-              <Text style={[styles.editApiText, { color: Colors.emerald }]}>⚡ Test Connection</Text>
+              <Text style={[styles.editApiText, { color: Colors.success }]}>⚡ Test Connection</Text>
             </TouchableOpacity>
           </View>
         )}

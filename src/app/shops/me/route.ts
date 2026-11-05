@@ -7,6 +7,9 @@ import {
   saveShopAsync,
 } from "@/lib/server-otp";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get("authorization") || "";

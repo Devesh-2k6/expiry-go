@@ -10,6 +10,9 @@ import {
 } from "@/lib/server-otp";
 import { normalizeProduct } from "@/lib/products/normalize";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: Request) {
   try {
     await ensureStoreLoaded();
