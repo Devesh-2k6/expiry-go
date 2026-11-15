@@ -33,7 +33,7 @@ interface MobileConnectModalProps {
 
 export function MobileConnectModal({ isOpen, onClose }: MobileConnectModalProps) {
   const [activeTab, setActiveTab] = useState<"expogo" | "apk" | "sync">("expogo");
-  const [hostIp, setHostIp] = useState<string>("127.0.0.1");
+  const [hostIp, setHostIp] = useState<string>("192.168.1.6");
   const [expoPort, setExpoPort] = useState<string>("8081");
   const [copied, setCopied] = useState<string | null>(null);
   
@@ -55,7 +55,13 @@ export function MobileConnectModal({ isOpen, onClose }: MobileConnectModalProps)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
-      if (hostname && hostname !== "localhost" && hostname !== "127.0.0.1") {
+      if (
+        hostname &&
+        hostname !== "localhost" &&
+        hostname !== "127.0.0.1" &&
+        !hostname.endsWith(".vercel.app") &&
+        hostname !== "expirygo.vercel.app"
+      ) {
         setHostIp(hostname);
       }
     }

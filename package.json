@@ -15,6 +15,8 @@
     "web:host": "python host_web.py",
     "host": "python host_web.py",
     "host:live": "python host_ecosystem_live.py",
+    "expo:vercel": "run-expo-and-vercel.bat",
+    "start:expo-vercel": "run-expo-and-vercel.bat",
     "mobile": "npm --prefix mobile start",
     "mobile:android": "npm --prefix mobile run android",
     "mobile:ios": "npm --prefix mobile run ios",

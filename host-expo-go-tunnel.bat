@@ -15,5 +15,5 @@ echo Starting Expo Go with Tunnel...
 echo Connect your phone (iOS / Android) with Expo Go anywhere!
 echo.
 cd mobile
-npx expo start --go --tunnel ngrok -c
+npx expo start --go --tunnel -c
 pause

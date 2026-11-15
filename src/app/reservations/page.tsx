@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { getMyReservations } from "@/services/reservations";
 import { getMyOrders, cancelOrder } from "@/services/orders";
 import { getSafeImageUrl } from "@/lib/images";
@@ -18,6 +19,7 @@ import { useToast, ConfirmModal } from "@/components/ui/Toast";
 import { useWebSocket } from "@/hooks/useWebSocket";
 
 export default function MyReservations() {
+  const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const toast = useToast();
   const [reservations, setReservations] = useState<ApiReservation[]>([]);
@@ -216,9 +218,20 @@ export default function MyReservations() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
         <header className="sticky top-0 z-30 bg-white/90 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 lg:px-8 pt-4 pb-3">
           <div className="w-full max-w-2xl lg:max-w-7xl mx-auto flex items-center gap-3">
-            <Link href="/deals" className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-              <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
-            </Link>
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined" && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push("/profile");
+                }
+              }}
+              className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-300 cursor-pointer"
+              aria-label="Back to previous page"
+              title="Back"
+            >
+              <ArrowLeft size={20} />
+            </button>
             <div>
               <h1 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">My Orders & Reservations</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Track and pick up your surplus reservations</p>

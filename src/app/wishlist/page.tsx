@@ -366,13 +366,20 @@ export default function WishlistPage() {
         <header className="sticky top-0 z-30 bg-white/80 dark:bg-[#0F141F]/80 backdrop-blur-xl border-b border-zinc-200/70 dark:border-zinc-800/80 px-4 lg:px-8 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <Link
-                href="/deals"
-                className="w-9 h-9 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 dark:bg-zinc-800/80 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition"
-                title="Back to Deals Feed"
+              <button
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    router.back();
+                  } else {
+                    router.push("/profile");
+                  }
+                }}
+                className="w-9 h-9 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 dark:bg-zinc-800/80 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
+                title="Back to previous page"
+                aria-label="Back"
               >
                 <ArrowLeft size={16} />
-              </Link>
+              </button>
               <div>
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
