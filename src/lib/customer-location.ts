@@ -238,3 +238,78 @@ export async function searchNominatimLocations(query: string): Promise<CustomerL
   return directMatches;
 }
 
+export async function reverseGeocodeCoords(
+  lat: number,
+  lng: number
+): Promise<{ city: string; address?: string }> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "Accept-Language": "en",
+        "User-Agent": "ExpiryGo-FoodRescue/1.0",
+      },
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.address) {
+        const addr = data.address;
+        const locality =
+          addr.suburb ||
+          addr.neighbourhood ||
+          addr.residential ||
+          addr.village ||
+          addr.quarter ||
+          "";
+        const city =
+          addr.city ||
+          addr.town ||
+          addr.county ||
+          addr.state_district ||
+          addr.state ||
+          "";
+
+        let displayName = "";
+        if (locality && city && locality !== city) {
+          displayName = `${locality}, ${city}`;
+        } else {
+          displayName = city || locality || "My Location";
+        }
+
+        return {
+          city: displayName,
+          address: data.display_name || displayName,
+        };
+      }
+    }
+  } catch (err) {
+    // fallback
+  }
+
+  // Fallback: match closest city from POPULAR_CITIES within ~25km
+  let closest: CustomerLocation | null = null;
+  let minDistance = Infinity;
+  for (const c of POPULAR_CITIES) {
+    const d = Math.hypot(c.lat - lat, c.lng - lng);
+    if (d < minDistance) {
+      minDistance = d;
+      closest = c;
+    }
+  }
+  if (closest && minDistance < 0.25) {
+    return {
+      city: closest.city,
+      address: closest.address,
+    };
+  }
+
+  return {
+    city: "My Location",
+  };
+}
+

@@ -79,6 +79,7 @@ import { CustomerLocationModal } from "@/components/CustomerLocationModal";
 import {
   getStoredLocation,
   setStoredLocation,
+  reverseGeocodeCoords,
   type CustomerLocation,
 } from "@/lib/customer-location";
 import {
@@ -318,18 +319,26 @@ export default function CustomerDealsPage() {
 
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        async (pos) => {
           clearTimeout(safetyTimeout);
-          setLat(pos.coords.latitude);
-          setLng(pos.coords.longitude);
+          const latitude = pos.coords.latitude;
+          const longitude = pos.coords.longitude;
+          setLat(latitude);
+          setLng(longitude);
           setLocationSource("gps");
           setLocationPermissionDenied(false);
           setIsLocating(false);
           setDismissApproxBanner(true);
+
+          // Real-time reverse geocoding to display the exact city & locality
+          const geoResult = await reverseGeocodeCoords(latitude, longitude);
+          const perfectCity = geoResult.city;
+          setLocationCity(perfectCity);
           setStoredLocation({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            city: "Live GPS Location",
+            lat: latitude,
+            lng: longitude,
+            city: perfectCity,
+            address: geoResult.address,
             source: "gps",
           });
         },
@@ -423,8 +432,22 @@ export default function CustomerDealsPage() {
       if (saved) {
         setLat(saved.lat);
         setLng(saved.lng);
-        setLocationCity(saved.city);
         setLocationSource(saved.source);
+
+        if (
+          !saved.city ||
+          saved.city === "Live GPS Location" ||
+          saved.city === "My GPS Location" ||
+          saved.city === "Chennai, Anna Nagar"
+        ) {
+          // Re-resolve true live locality and city
+          reverseGeocodeCoords(saved.lat, saved.lng).then((res) => {
+            setLocationCity(res.city);
+            setStoredLocation({ ...saved, city: res.city, address: res.address });
+          });
+        } else {
+          setLocationCity(saved.city);
+        }
         return;
       }
     }
@@ -878,7 +901,13 @@ export default function CustomerDealsPage() {
               >
                 <MapPin size={13} className="text-emerald-500 shrink-0" />
                 <span className="truncate max-w-[130px] sm:max-w-xs font-bold text-zinc-900 dark:text-white">
-                  {locationCity || (lat && lng ? "Live GPS Location" : "Chennai, Anna Nagar")}
+                  {isLocating
+                    ? "Detecting location..."
+                    : locationCity
+                    ? locationCity
+                    : lat && lng
+                    ? "Live GPS Location"
+                    : "Select Location"}
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 <ChevronDown size={12} className="text-zinc-400 shrink-0" />

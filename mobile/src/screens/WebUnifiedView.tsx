@@ -155,7 +155,12 @@ export const WebUnifiedView: React.FC = () => {
   // Request native phone GPS and bridge it into the WebView
   const requestAndInjectDeviceLocation = async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      let { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== "granted") {
+        const req = await Location.requestForegroundPermissionsAsync();
+        status = req.status;
+      }
+
       if (status !== "granted") {
         webViewRef.current?.injectJavaScript(`
           try {
@@ -170,20 +175,30 @@ export const WebUnifiedView: React.FC = () => {
         return;
       }
 
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      // Check last known position first for instant response
+      let loc = await Location.getLastKnownPositionAsync({});
+      if (!loc) {
+        loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+      }
 
       const lat = loc.coords.latitude;
       const lng = loc.coords.longitude;
-      let city = "My GPS Location";
+      let city = "My Location";
       let address = `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
       try {
         const geo = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
         if (geo && geo[0]) {
           const item = geo[0];
-          city = item.city || item.subregion || item.district || item.name || city;
+          const locality = item.district || item.subregion || item.name;
+          const town = item.city || item.region;
+          if (locality && town && locality !== town) {
+            city = `${locality}, ${town}`;
+          } else {
+            city = town || locality || "My Location";
+          }
           const parts = [item.name, item.street, item.city, item.region, item.postalCode].filter(Boolean);
           if (parts.length > 0) {
             address = parts.join(", ");
@@ -361,6 +376,9 @@ export const WebUnifiedView: React.FC = () => {
           style={styles.webview}
           injectedJavaScript={INJECTED_SCANNER_BRIDGE}
           onMessage={handleMessage}
+          onLoadEnd={() => {
+            void requestAndInjectDeviceLocation();
+          }}
           onNavigationStateChange={(nav: any) => {
             if (typeof nav?.canGoBack === "boolean") {
               canGoBackRef.current = nav.canGoBack;

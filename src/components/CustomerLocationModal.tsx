@@ -18,6 +18,7 @@ import {
   POPULAR_CITIES,
   searchNominatimLocations,
   setStoredLocation,
+  reverseGeocodeCoords,
 } from "@/lib/customer-location";
 import { fetchIpGeolocation } from "@/lib/geolocation";
 
@@ -123,33 +124,9 @@ export function CustomerLocationModal({
           clearTimeout(safetyTimer);
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
-          let city = "My Current Location";
-          let address = `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
-          try {
-            const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-            );
-            if (res.ok) {
-              const data = await res.json();
-              if (data && data.address) {
-                const sub =
-                  data.address.suburb ||
-                  data.address.neighbourhood ||
-                  data.address.residential ||
-                  data.address.village;
-                const c =
-                  data.address.city ||
-                  data.address.town ||
-                  data.address.county ||
-                  data.address.state_district;
-                city = sub && c ? `${sub}, ${c}` : c || sub || "Live GPS Location";
-                address = data.display_name || address;
-              }
-            }
-          } catch {
-            // fallback to default
-          }
+          const geo = await reverseGeocodeCoords(lat, lng);
+          const city = geo.city;
+          const address = geo.address || `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
           setIsLocatingGps(false);
           handleSelect({
