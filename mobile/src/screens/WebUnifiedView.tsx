@@ -400,7 +400,6 @@ export const WebUnifiedView: React.FC = () => {
           androidLayerType="hardware"
           androidHardwareAccelerationDisabled={false}
           overScrollMode="never"
-          decelerationRate="normal"
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           bounces={Platform.OS === "ios"}

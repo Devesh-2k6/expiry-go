@@ -33,7 +33,7 @@ interface MobileConnectModalProps {
 
 export function MobileConnectModal({ isOpen, onClose }: MobileConnectModalProps) {
   const [activeTab, setActiveTab] = useState<"expogo" | "apk" | "sync">("expogo");
-  const [hostIp, setHostIp] = useState<string>("192.168.1.6");
+  const [hostIp, setHostIp] = useState<string>("10.212.161.184");
   const [expoPort, setExpoPort] = useState<string>("8081");
   const [copied, setCopied] = useState<string | null>(null);
   

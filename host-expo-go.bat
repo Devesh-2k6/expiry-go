@@ -11,7 +11,7 @@ echo.
 
 :: 1. Auto-detect Wi-Fi IP and sync
 for /f "tokens=*" %%i in ('node get_ip.cjs 2^>nul') do set LAN_IP=%%i
-if "%LAN_IP%"=="" set LAN_IP=10.88.239.184
+if "%LAN_IP%"=="" set LAN_IP=10.212.161.184
 echo [Detected Wi-Fi / LAN IP]: %LAN_IP%
 echo.
 
@@ -52,7 +52,7 @@ if /i "%MODE%"=="lan" (
     npx expo start --web
 ) else (
     echo.
-    echo [Starting Expo Go in TUNNEL Mode (Worldwide Access)]...
+    echo [Starting Expo Go in TUNNEL Mode - Worldwide Access]...
     echo.
     npx expo start --go --tunnel ngrok -c
 )

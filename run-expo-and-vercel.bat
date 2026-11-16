@@ -34,12 +34,17 @@ echo ============================================================
 echo.
 
 set MODE=%1
-if "%MODE%"=="" (
-    choice /C 123 /N /T 6 /D 1 /M "Select mode [1=Tunnel, 2=LAN, 3=Web] (Auto-defaults to 1 in 6s): "
-    if errorlevel 3 set MODE=web
-    if errorlevel 2 if not "!MODE!"=="web" set MODE=lan
-    if errorlevel 1 if not "!MODE!"=="web" if not "!MODE!"=="lan" set MODE=tunnel
-)
+if not "%MODE%"=="" goto RUN_MODE
+
+choice /C 123 /N /T 6 /D 1 /M "Select mode [1=Tunnel, 2=LAN, 3=Web] (Auto-defaults to 1 in 6s): "
+if errorlevel 3 set MODE=web
+if errorlevel 2 if not "!MODE!"=="web" set MODE=lan
+if errorlevel 1 if not "!MODE!"=="web" if not "!MODE!"=="lan" set MODE=tunnel
+
+:RUN_MODE
+if /i "%MODE%"=="1" set MODE=tunnel
+if /i "%MODE%"=="2" set MODE=lan
+if /i "%MODE%"=="3" set MODE=web
 
 cd mobile
 if /i "%MODE%"=="web" (
@@ -55,9 +60,9 @@ if /i "%MODE%"=="web" (
     npx expo start --go --host lan -c
 ) else (
     echo.
-    echo Starting Expo Go in TUNNEL Mode (Worldwide Access)...
+    echo Starting Expo Go in TUNNEL Mode - Worldwide Access...
     echo.
-    npx expo start --go --tunnel -c
+    npx expo start --go --tunnel ngrok -c
 )
 
 pause
