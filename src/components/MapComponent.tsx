@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -98,17 +98,29 @@ function createUserIcon() {
 
 function RecenterMap({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
   const map = useMap();
+  const prevCoordsRef = useRef<[number, number] | null>(null);
+
   useEffect(() => {
     if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      map.flyTo([lat, lng], zoom, { animate: true, duration: 1.0 });
+      const prev = prevCoordsRef.current;
+      if (!prev) {
+        prevCoordsRef.current = [lat, lng];
+        map.setView([lat, lng], zoom, { animate: false });
+      } else if (
+        Math.abs(prev[0] - lat) > 0.0001 ||
+        Math.abs(prev[1] - lng) > 0.0001
+      ) {
+        prevCoordsRef.current = [lat, lng];
+        map.flyTo([lat, lng], zoom, { animate: true, duration: 0.5 });
+      }
     }
   }, [lat, lng, zoom, map]);
 
   useEffect(() => {
-    map.invalidateSize();
-    const t1 = setTimeout(() => map.invalidateSize(), 150);
-    const t2 = setTimeout(() => map.invalidateSize(), 600);
-    const handleResize = () => map.invalidateSize();
+    map.invalidateSize({ animate: false });
+    const t1 = setTimeout(() => map.invalidateSize({ animate: false }), 100);
+    const t2 = setTimeout(() => map.invalidateSize({ animate: false }), 400);
+    const handleResize = () => map.invalidateSize({ animate: false });
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -181,11 +193,11 @@ export default function MapComponent({
       return;
     }
 
-    // Call OSRM turn-by-turn road routing engine
+    // Call OSRM turn-by-turn road routing engine with 3s timeout
     const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${selectedMarker.lng},${selectedMarker.lat}?overview=full&geometries=geojson`;
     let isCancelled = false;
 
-    fetch(osrmUrl)
+    fetch(osrmUrl, { signal: AbortSignal.timeout(3500) })
       .then((res) => res.json())
       .then((data) => {
         if (isCancelled) return;
@@ -226,15 +238,24 @@ export default function MapComponent({
       >
         {layerType === "streets" ? (
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            maxZoom={19}
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            subdomains={["a", "b", "c", "d"]}
+            maxZoom={20}
+            keepBuffer={6}
+            updateWhenZooming={false}
+            updateWhenIdle={true}
+            crossOrigin={true}
           />
         ) : (
           <TileLayer
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             attribution='&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
             maxZoom={19}
+            keepBuffer={6}
+            updateWhenZooming={false}
+            updateWhenIdle={true}
+            crossOrigin={true}
           />
         )}
 
