@@ -96,6 +96,16 @@ const INJECTED_SCANNER_BRIDGE = `
         if (origGeo) origGeo(success, error, options);
       };
     }
+
+    // Inject ultra-smooth native mobile touch & rendering tweaks
+    try {
+      if (!document.getElementById('expo-smoothness-tweaks')) {
+        var smoothStyle = document.createElement('style');
+        smoothStyle.id = 'expo-smoothness-tweaks';
+        smoothStyle.textContent = '* { -webkit-tap-highlight-color: transparent !important; touch-action: manipulation; } html, body { overscroll-behavior-y: contain !important; -webkit-overflow-scrolling: touch !important; -webkit-font-smoothing: antialiased !important; } button, a, [role="button"] { user-select: none !important; -webkit-user-select: none !important; }';
+        document.head.appendChild(smoothStyle);
+      }
+    } catch(e) {}
   })();
   true;
 `;
@@ -386,6 +396,14 @@ export const WebUnifiedView: React.FC = () => {
           pullToRefreshEnabled={true}
           sharedCookiesEnabled={true}
           cacheEnabled={true}
+          cacheMode="LOAD_DEFAULT"
+          androidLayerType="hardware"
+          androidHardwareAccelerationDisabled={false}
+          overScrollMode="never"
+          decelerationRate="normal"
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          bounces={Platform.OS === "ios"}
           geolocationEnabled={true}
           allowsInlineMediaPlayback={true}
           mediaPlaybackRequiresUserAction={false}

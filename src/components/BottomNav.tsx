@@ -33,6 +33,7 @@ export function BottomNav() {
     { href: "/map", label: "Explore", icon: Compass },
     { href: "/pantry", label: "Fridge", icon: Sparkles },
     { href: "/reservations", label: "Pickups", icon: ShoppingBag },
+    { href: "/profile", label: "Profile", icon: User },
   ];
 
   return (
