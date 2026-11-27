@@ -143,7 +143,9 @@ export async function POST(req: Request) {
       user.email_verified = true;
       if (isVendor && !user.is_shop_owner) {
         user.is_shop_owner = true;
-        user.role = "VENDOR";
+        if (user.role !== "ADMIN" && user.email !== "devpant2006@gmail.com") {
+          user.role = "VENDOR";
+        }
       }
       if (record?.hashed_password || record?.password) {
         user.password_hash = record.hashed_password || record.password;

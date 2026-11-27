@@ -139,15 +139,35 @@ export default function ShopDashboardOverview() {
 
   const fetchPendingActions = async () => {
     try {
+      // Clear stale browser-cached test reservations from earlier customer testing
+      if (typeof window !== "undefined") {
+        try {
+          const rawLocal = localStorage.getItem("expirygo_local_reservations_v1");
+          if (rawLocal) {
+            const list = JSON.parse(rawLocal);
+            if (Array.isArray(list)) {
+              const valid = list.filter((r: any) => shopId && (r.shop_id === shopId || r.product?.shop?.id === shopId));
+              if (valid.length !== list.length) {
+                localStorage.setItem("expirygo_local_reservations_v1", JSON.stringify(valid));
+              }
+            }
+          }
+        } catch {}
+      }
+
       const [orderData, resData] = await Promise.all([
         getShopOrders().catch(() => []),
         getShopReservations().catch(() => []),
       ]);
       const actionableOrders = (orderData || []).filter(
-        (o: ApiOrder) => (["PENDING", "ACCEPTED", "OUT_FOR_DELIVERY"] as OrderStatus[]).includes(o.status)
+        (o: ApiOrder) =>
+          (["PENDING", "ACCEPTED", "OUT_FOR_DELIVERY"] as OrderStatus[]).includes(o.status) &&
+          (!shopId || o.shop_id === shopId || o.product?.shop?.id === shopId)
       );
       const actionableRes = (resData || []).filter(
-        (r: ApiReservation) => r.status === "PENDING"
+        (r: ApiReservation) =>
+          r.status === "PENDING" &&
+          (!shopId || r.shop_id === shopId || r.product?.shop?.id === shopId)
       );
       setPendingOrders(actionableOrders);
       setPendingReservations(actionableRes);

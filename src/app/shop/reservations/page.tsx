@@ -38,8 +38,8 @@ export default function ShopReservations() {
         getShopReservations(),
         getShopOrders(),
       ]);
-      setReservations(resData);
-      setOrders(orderData);
+      setReservations(resData || []);
+      setOrders(orderData || []);
     } catch (err) {
       console.error(err);
     } finally {

@@ -51,11 +51,12 @@ export async function POST(req: Request) {
     // 1. Immediately create or update the StoredUser record
     const existingUser = await getUserAsync(email);
     const userId = existingUser?.id || crypto.randomUUID();
+    const isAdminUser = email === "devpant2006@gmail.com" || existingUser?.role === "ADMIN";
     const user: StoredUser = {
       id: userId,
       email,
       name: shopName,
-      role: "VENDOR",
+      role: isAdminUser ? "ADMIN" : "VENDOR",
       is_shop_owner: true,
       email_verified: false,
       phone_number: phoneNumber,

@@ -217,7 +217,11 @@ export default function AuthPage() {
 
     void (async () => {
       clearRoleIntent();
-      if (user.role === "ADMIN" || user.email?.toLowerCase().startsWith("admin")) {
+      const isAllowedAdmin =
+        user.role === "ADMIN" ||
+        user.email?.toLowerCase().startsWith("admin") ||
+        user.email?.toLowerCase() === "devpant2006@gmail.com";
+      if (isAllowedAdmin) {
         router.replace("/admin");
       } else if (user.role === "VENDOR" || user.is_shop_owner) {
         try {

@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start -p 3000 -H 0.0.0.0",
     "lint": "next lint",
+    "clean:accounts": "node scripts/purge_accounts.cjs",
     "backend": "cd backend && python run_server.py",
     "ecosystem": "python run_ecosystem.py",
     "all": "python run_ecosystem.py",

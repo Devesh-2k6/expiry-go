@@ -18,7 +18,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.replace("/auth?role=admin&tab=login");
         return;
       }
-      if (user.role !== "ADMIN" && !user.email?.toLowerCase().startsWith("admin")) {
+      const isAllowedAdmin =
+        user.role === "ADMIN" ||
+        user.email?.toLowerCase().startsWith("admin") ||
+        user.email?.toLowerCase() === "devpant2006@gmail.com";
+      if (!isAllowedAdmin) {
         router.replace("/deals");
       }
     }

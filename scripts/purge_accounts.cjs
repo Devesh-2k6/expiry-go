@@ -23,7 +23,11 @@ const cleanStore = {
   products: [],
   otps: {},
   reservations: [],
-  orders: []
+  orders: [],
+  pantry: [],
+  scanner_events: [],
+  favorites: [],
+  followers: []
 };
 
 async function wipe() {
@@ -55,11 +59,17 @@ async function wipe() {
     try {
       if (fs.existsSync(dbPath)) {
         const db = new DatabaseSync(dbPath);
-        db.exec("DELETE FROM users WHERE role != 'ADMIN'");
-        db.exec("DELETE FROM shops");
-        db.exec("DELETE FROM products");
-        db.exec("DELETE FROM orders");
-        db.exec("DELETE FROM reservations");
+        db.exec("DELETE FROM reviews;");
+        db.exec("DELETE FROM favorites;");
+        db.exec("DELETE FROM followers;");
+        db.exec("DELETE FROM pantry_items;");
+        db.exec("DELETE FROM notifications;");
+        db.exec("DELETE FROM reservations;");
+        db.exec("DELETE FROM orders;");
+        db.exec("DELETE FROM products;");
+        db.exec("DELETE FROM shops;");
+        db.exec("DELETE FROM users WHERE role != 'ADMIN' AND email != 'devpant2006@gmail.com';");
+        db.exec("VACUUM;");
         const remaining = db.prepare("SELECT id, email, role FROM users").all();
         console.log('Remaining users in SQLite', dbPath, ':', remaining);
         db.close();
