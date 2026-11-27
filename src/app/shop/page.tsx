@@ -431,10 +431,11 @@ export default function ShopDashboardOverview() {
     );
   }
 
-  const isPending = shop.approval_status === "PENDING";
-  const isApproved = shop.approval_status === "APPROVED" && shop.is_active && shop.location_verified;
-  const isRejected = shop.approval_status === "REJECTED";
-  const isSuspended = shop.approval_status === "SUSPENDED";
+  const shopStatus = (shop.approval_status || "PENDING").toUpperCase();
+  const isPending = shopStatus === "PENDING";
+  const isApproved = shopStatus === "APPROVED" && shop.is_active !== false;
+  const isRejected = shopStatus === "REJECTED";
+  const isSuspended = shopStatus === "SUSPENDED";
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">

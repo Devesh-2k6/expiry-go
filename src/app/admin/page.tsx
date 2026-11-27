@@ -52,7 +52,6 @@ import { ConfirmModal } from "@/components/ui/Toast";
 import { useAuth } from "@/contexts/AuthenticationContext";
 import { getErrorMessage } from "@/api/errors";
 import { getPublicApiBaseUrl } from "@/config/env";
-import { useWebSocket } from "@/hooks/useWebSocket";
 import Link from "next/link";
 
 const AdminLocationMap = dynamic(() => import("@/components/AdminLocationMap"), {
@@ -234,8 +233,6 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const pollCountRef = useRef(0);
-
   const loadData = useCallback(async (isInitial = false) => {
     if (isInitial) setIsLoading(true);
     try {
@@ -256,43 +253,6 @@ export default function AdminDashboardPage() {
     void loadData(true);
   }, [loadData]);
 
-  // Real-time synchronization: refresh admin stats and shops list on actual mutation events (ignoring heartbeats)
-  useWebSocket((msg) => {
-    if (msg?.type && msg.type !== "heartbeat_sync") {
-      void loadData(false);
-    }
-  });
-
-  // Auto-polling: If any pending shop has background location verification still in progress, poll with bounded retries
-  useEffect(() => {
-    const hasUnverifiedPending = shops.some(
-      (s) => s.approval_status === "PENDING" && !s.location_verification_provider
-    );
-    if (!hasUnverifiedPending || pollCountRef.current >= 4) return;
-
-    const interval = setInterval(() => {
-      void (async () => {
-        try {
-          pollCountRef.current += 1;
-          const freshShops = await getAllShops();
-          setShops((prev) => {
-            if (JSON.stringify(prev) !== JSON.stringify(freshShops)) {
-              return freshShops;
-            }
-            return prev;
-          });
-          if (pollCountRef.current >= 4) {
-            clearInterval(interval);
-          }
-        } catch (e) {
-          console.error("Polling error:", e);
-        }
-      })();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [shops]);
-
   const handleApprove = async (shop: AdminShop) => {
     if (!shop.location_verified) {
       // Prompt for override
@@ -312,9 +272,23 @@ export default function AdminDashboardPage() {
       action: async () => {
         setActionLoading(shop.id);
         try {
-          await approveShop(shop.id);
+          const updated = await approveShop(shop.id);
+          setShops((prev) =>
+            prev.map((s) =>
+              s.id === shop.id
+                ? {
+                    ...s,
+                    ...(updated || {}),
+                    approval_status: "APPROVED",
+                    is_active: true,
+                    location_verified: true,
+                    approved_at: new Date().toISOString(),
+                    approved_by: "Platform Admin",
+                  }
+                : s
+            )
+          );
           showToast(`Shop '${shop.name}' has been APPROVED and activated!`);
-          await loadData();
         } catch (err: unknown) {
           showToast(getErrorMessage(err) || "Failed to approve shop.", "error");
         } finally {
@@ -333,18 +307,35 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    setActionLoading(selectedShopForOverride.id);
+    const shopToApprove = selectedShopForOverride;
+    setActionLoading(shopToApprove.id);
     try {
-      await approveShop(
-        selectedShopForOverride.id,
+      const updated = await approveShop(
+        shopToApprove.id,
         overrideNotes.trim(),
         true,
         overrideReason.trim()
       );
-      showToast(`Shop '${selectedShopForOverride.name}' APPROVED with location override!`);
+      setShops((prev) =>
+        prev.map((s) =>
+          s.id === shopToApprove.id
+            ? {
+                ...s,
+                ...(updated || {}),
+                approval_status: "APPROVED",
+                is_active: true,
+                location_verified: true,
+                location_override_reason: overrideReason.trim(),
+                location_override_by: "Platform Admin",
+                approved_at: new Date().toISOString(),
+                approved_by: "Platform Admin",
+              }
+            : s
+        )
+      );
+      showToast(`Shop '${shopToApprove.name}' APPROVED with location override!`);
       setOverrideModalOpen(false);
       setSelectedShopForOverride(null);
-      await loadData();
     } catch (err: unknown) {
       setOverrideError(getErrorMessage(err) || "Failed to approve shop.");
     } finally {
@@ -385,13 +376,26 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    setActionLoading(selectedShopForReject.id);
+    const shopToReject = selectedShopForReject;
+    setActionLoading(shopToReject.id);
     try {
-      await rejectShop(selectedShopForReject.id, rejectReason.trim());
-      showToast(`Shop '${selectedShopForReject.name}' application REJECTED.`);
+      const updated = await rejectShop(shopToReject.id, rejectReason.trim());
+      setShops((prev) =>
+        prev.map((s) =>
+          s.id === shopToReject.id
+            ? {
+                ...s,
+                ...(updated || {}),
+                approval_status: "REJECTED",
+                is_active: false,
+                approval_reason: rejectReason.trim(),
+              }
+            : s
+        )
+      );
+      showToast(`Shop '${shopToReject.name}' application REJECTED.`);
       setRejectModalOpen(false);
       setSelectedShopForReject(null);
-      await loadData();
     } catch (err: unknown) {
       setRejectError(getErrorMessage(err) || "Failed to reject shop.");
     } finally {
@@ -408,13 +412,26 @@ export default function AdminDashboardPage() {
   const handleConfirmSuspend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedShopForSuspend) return;
-    setActionLoading(selectedShopForSuspend.id);
+    const shopToSuspend = selectedShopForSuspend;
+    setActionLoading(shopToSuspend.id);
     try {
-      await suspendShop(selectedShopForSuspend.id, suspendReason.trim());
-      showToast(`Shop '${selectedShopForSuspend.name}' suspended.`);
+      const updated = await suspendShop(shopToSuspend.id, suspendReason.trim());
+      setShops((prev) =>
+        prev.map((s) =>
+          s.id === shopToSuspend.id
+            ? {
+                ...s,
+                ...(updated || {}),
+                approval_status: "SUSPENDED",
+                is_active: false,
+                approval_reason: suspendReason.trim(),
+              }
+            : s
+        )
+      );
+      showToast(`Shop '${shopToSuspend.name}' suspended.`);
       setSuspendModalOpen(false);
       setSelectedShopForSuspend(null);
-      await loadData();
     } catch (err: unknown) {
       showToast(getErrorMessage(err) || "Failed to suspend shop.", "error");
     } finally {
@@ -431,9 +448,21 @@ export default function AdminDashboardPage() {
       action: async () => {
         setActionLoading(shop.id);
         try {
-          await reactivateShop(shop.id);
+          const updated = await reactivateShop(shop.id);
+          setShops((prev) =>
+            prev.map((s) =>
+              s.id === shop.id
+                ? {
+                    ...s,
+                    ...(updated || {}),
+                    approval_status: "APPROVED",
+                    is_active: true,
+                    location_verified: true,
+                  }
+                : s
+            )
+          );
           showToast(`Shop '${shop.name}' reactivated!`);
-          await loadData();
         } catch (err: unknown) {
           showToast(getErrorMessage(err) || "Failed to reactivate shop.", "error");
         } finally {
@@ -514,7 +543,8 @@ export default function AdminDashboardPage() {
   }
 
   const filteredShops = shops.filter((shop) => {
-    const matchesTab = activeTab === "ALL" ? true : shop.approval_status === activeTab;
+    const status = (shop.approval_status || "PENDING").toUpperCase();
+    const matchesTab = activeTab === "ALL" ? true : status === activeTab;
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
       !q ||
@@ -526,10 +556,10 @@ export default function AdminDashboardPage() {
     return matchesTab && matchesSearch;
   });
 
-  const pendingCount = shops.filter((s) => s.approval_status === "PENDING").length;
-  const approvedCount = shops.filter((s) => s.approval_status === "APPROVED").length;
-  const rejectedCount = shops.filter((s) => s.approval_status === "REJECTED").length;
-  const suspendedCount = shops.filter((s) => s.approval_status === "SUSPENDED").length;
+  const pendingCount = shops.filter((s) => (s.approval_status || "PENDING").toUpperCase() === "PENDING").length;
+  const approvedCount = shops.filter((s) => (s.approval_status || "").toUpperCase() === "APPROVED").length;
+  const rejectedCount = shops.filter((s) => (s.approval_status || "").toUpperCase() === "REJECTED").length;
+  const suspendedCount = shops.filter((s) => (s.approval_status || "").toUpperCase() === "SUSPENDED").length;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
@@ -778,10 +808,11 @@ export default function AdminDashboardPage() {
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-gray-700/60">
             {filteredShops.map((shop) => {
-              const isPending = shop.approval_status === "PENDING";
-              const isApproved = shop.approval_status === "APPROVED";
-              const isRejected = shop.approval_status === "REJECTED";
-              const isSuspended = shop.approval_status === "SUSPENDED";
+              const status = (shop.approval_status || "PENDING").toUpperCase();
+              const isPending = status === "PENDING";
+              const isApproved = status === "APPROVED";
+              const isRejected = status === "REJECTED";
+              const isSuspended = status === "SUSPENDED";
               const isCurrentActionLoading = actionLoading === shop.id;
 
               return (
@@ -906,8 +937,9 @@ export default function AdminDashboardPage() {
 
                       {/* Embedded Leaflet Map Component */}
                       <AdminLocationMap
-                        submittedLat={shop.latitude}
-                        submittedLng={shop.longitude}
+                        key={`admin-loc-map-${shop.id}-${status}`}
+                        submittedLat={Number(shop.latitude) || 0}
+                        submittedLng={Number(shop.longitude) || 0}
                         submittedName={shop.name}
                         submittedAddress={shop.address}
                         matchedLat={shop.latitude} // Primary point

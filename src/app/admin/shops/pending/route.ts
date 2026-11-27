@@ -4,7 +4,9 @@ import { ensureStoreLoaded, getAllShopsAsync, getUserByIdAsync } from "@/lib/ser
 export async function GET() {
   try {
     await ensureStoreLoaded();
-    const shops = (await getAllShopsAsync()).filter((s) => s.approval_status === "PENDING");
+    const shops = (await getAllShopsAsync()).filter(
+      (s) => (s.approval_status || "PENDING").toUpperCase() === "PENDING"
+    );
     const enriched = await Promise.all(
       shops.map(async (s) => {
         const owner = await getUserByIdAsync(s.owner_id);

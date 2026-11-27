@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, Component } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -17,6 +17,40 @@ interface AdminLocationMapProps {
   distanceMeters?: number | null;
   category?: string | null;
   isVerified?: boolean;
+}
+
+class MapErrorBoundary extends Component<
+  { fallbackLat: number; fallbackLng: number; children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: any) {
+    console.error("AdminLocationMap Leaflet error caught gracefully:", error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-44 rounded-2xl bg-slate-100 dark:bg-gray-800 flex flex-col items-center justify-center p-4 text-xs text-slate-500 border border-slate-200 dark:border-gray-700 space-y-1">
+          <p className="font-bold text-slate-700 dark:text-gray-300">📍 Location Coordinates Available</p>
+          <a
+            href={`https://www.google.com/maps?q=${this.props.fallbackLat},${this.props.fallbackLng}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
+          >
+            View pin on Google Maps &rarr;
+          </a>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function createSubmittedPin() {
@@ -63,32 +97,38 @@ function FitMapBounds({
   points: [number, number][];
 }) {
   const map = useMap();
+  const serialized = points.map((p) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`).join("|");
 
   useEffect(() => {
-    if (points.length === 1) {
-      map.setView(points[0], 17);
-    } else if (points.length > 1) {
-      const bounds = L.latLngBounds(points);
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 18 });
+    try {
+      if (points.length === 1) {
+        map.setView(points[0], 17);
+      } else if (points.length > 1) {
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 18 });
+      }
+    } catch (e) {
+      console.warn("FitMapBounds error ignored:", e);
     }
-  }, [map, points]);
+  }, [map, serialized]);
 
   return null;
 }
 
-export default function AdminLocationMap({
-  submittedLat,
-  submittedLng,
-  submittedName,
-  submittedAddress,
-  matchedLat,
-  matchedLng,
-  matchedName,
-  matchedAddress,
-  distanceMeters,
-  category,
-  isVerified = false,
-}: AdminLocationMapProps) {
+export default function AdminLocationMap(props: AdminLocationMapProps) {
+  const {
+    submittedLat,
+    submittedLng,
+    submittedName,
+    submittedAddress,
+    matchedLat,
+    matchedLng,
+    matchedName,
+    matchedAddress,
+    distanceMeters,
+    category,
+    isVerified = false,
+  } = props;
   const submittedIcon = useMemo(() => createSubmittedPin(), []);
   const matchedIcon = useMemo(() => createMatchedPin(isVerified), [isVerified]);
 
@@ -122,102 +162,105 @@ export default function AdminLocationMap({
     : [];
 
   return (
-    <div className="relative w-full h-52 sm:h-60 rounded-2xl overflow-hidden border border-slate-200 dark:border-gray-700 shadow-inner z-0">
-      <MapContainer
-        center={[submittedLat, submittedLng]}
-        zoom={17}
-        scrollWheelZoom={false}
-        className="w-full h-full"
-        style={{ background: "#f8fafc" }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          maxZoom={19}
-        />
-
-        {/* 100m Allowed Verification Radius Circle */}
-        <Circle
+    <MapErrorBoundary fallbackLat={submittedLat} fallbackLng={submittedLng}>
+      <div className="relative w-full h-52 sm:h-60 rounded-2xl overflow-hidden border border-slate-200 dark:border-gray-700 shadow-inner z-0">
+        <MapContainer
+          key={`admin-map-${submittedLat.toFixed(5)}-${submittedLng.toFixed(5)}-${category || "food"}`}
           center={[submittedLat, submittedLng]}
-          radius={100}
-          pathOptions={{
-            color: isVerified ? "#10b981" : "#3b82f6",
-            fillColor: isVerified ? "#10b981" : "#3b82f6",
-            fillOpacity: 0.12,
-            weight: 2,
-            dashArray: "4 4",
-          }}
-        />
+          zoom={17}
+          scrollWheelZoom={false}
+          className="w-full h-full"
+          style={{ background: "#f8fafc" }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={19}
+          />
 
-        {/* Pin 1: Vendor Submitted Location */}
-        <Marker position={[submittedLat, submittedLng]} icon={submittedIcon}>
-          <Popup className="custom-admin-popup">
-            <div className="p-1 space-y-1 text-xs">
-              <span className="font-bold text-blue-600 uppercase tracking-wider text-[10px]">
-                📍 Vendor Submitted Pin
-              </span>
-              <p className="font-bold text-slate-900">{submittedName}</p>
-              {submittedAddress && <p className="text-slate-600 text-[11px]">{submittedAddress}</p>}
-              <p className="text-[10px] text-slate-400 font-mono">
-                GPS: {submittedLat.toFixed(6)}, {submittedLng.toFixed(6)}
-              </p>
-            </div>
-          </Popup>
-        </Marker>
+          {/* 100m Allowed Verification Radius Circle */}
+          <Circle
+            center={[submittedLat, submittedLng]}
+            radius={100}
+            pathOptions={{
+              color: isVerified ? "#10b981" : "#3b82f6",
+              fillColor: isVerified ? "#10b981" : "#3b82f6",
+              fillOpacity: 0.12,
+              weight: 2,
+              dashArray: "4 4",
+            }}
+          />
 
-        {/* Pin 2: OpenStreetMap Verified Match */}
-        {hasValidMatched && (
-          <Marker position={[matchedLat!, matchedLng!]} icon={matchedIcon}>
+          {/* Pin 1: Vendor Submitted Location */}
+          <Marker position={[submittedLat, submittedLng]} icon={submittedIcon}>
             <Popup className="custom-admin-popup">
               <div className="p-1 space-y-1 text-xs">
-                <span className="font-bold text-emerald-600 uppercase tracking-wider text-[10px]">
-                  🏪 OSM Matched Food Entity
+                <span className="font-bold text-blue-600 uppercase tracking-wider text-[10px]">
+                  📍 Vendor Submitted Pin
                 </span>
-                <p className="font-bold text-slate-900">{matchedName || submittedName}</p>
-                {matchedAddress && <p className="text-slate-600 text-[11px]">{matchedAddress}</p>}
-                {distanceMeters != null && (
-                  <p className="text-emerald-700 font-bold text-[10px]">
-                    Distance: {typeof distanceMeters === "number" ? distanceMeters.toFixed(1) : distanceMeters}m from submitted pin
-                  </p>
-                )}
-                {category && (
-                  <span className="inline-block px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[9px] font-bold">
-                    {category}
-                  </span>
-                )}
+                <p className="font-bold text-slate-900">{submittedName}</p>
+                {submittedAddress && <p className="text-slate-600 text-[11px]">{submittedAddress}</p>}
+                <p className="text-[10px] text-slate-400 font-mono">
+                  GPS: {submittedLat.toFixed(6)}, {submittedLng.toFixed(6)}
+                </p>
               </div>
             </Popup>
           </Marker>
-        )}
 
-        {/* Polyline connecting submitted to matched node */}
-        {polylineCoords.length === 2 && (
-          <Polyline
-            positions={polylineCoords}
-            pathOptions={{
-              color: "#8b5cf6",
-              weight: 2,
-              dashArray: "5 5",
-              opacity: 0.8,
-            }}
-          />
-        )}
+          {/* Pin 2: OpenStreetMap Verified Match */}
+          {hasValidMatched && (
+            <Marker position={[matchedLat!, matchedLng!]} icon={matchedIcon}>
+              <Popup className="custom-admin-popup">
+                <div className="p-1 space-y-1 text-xs">
+                  <span className="font-bold text-emerald-600 uppercase tracking-wider text-[10px]">
+                    🏪 OSM Matched Food Entity
+                  </span>
+                  <p className="font-bold text-slate-900">{matchedName || submittedName}</p>
+                  {matchedAddress && <p className="text-slate-600 text-[11px]">{matchedAddress}</p>}
+                  {distanceMeters != null && (
+                    <p className="text-emerald-700 font-bold text-[10px]">
+                      Distance: {typeof distanceMeters === "number" ? distanceMeters.toFixed(1) : distanceMeters}m from submitted pin
+                    </p>
+                  )}
+                  {category && (
+                    <span className="inline-block px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded text-[9px] font-bold">
+                      {category}
+                    </span>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          )}
 
-        <FitMapBounds points={points} />
-      </MapContainer>
+          {/* Polyline connecting submitted to matched node */}
+          {polylineCoords.length === 2 && (
+            <Polyline
+              positions={polylineCoords}
+              pathOptions={{
+                color: "#8b5cf6",
+                weight: 2,
+                dashArray: "5 5",
+                opacity: 0.8,
+              }}
+            />
+          )}
 
-      {/* Map Legend Overlay */}
-      <div className="absolute top-2 right-2 z-[400] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-gray-700 shadow-md text-[10px] space-y-1">
-        <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-gray-200">
-          <span className="w-2 h-2 rounded-full bg-blue-500"></span> Submitted GPS
-        </div>
-        <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span> OSM Food Match
-        </div>
-        <div className="flex items-center gap-1.5 font-medium text-slate-500">
-          <span className="w-2 h-0.5 bg-blue-400 border-b border-dashed"></span> 100m Radius
+          <FitMapBounds points={points} />
+        </MapContainer>
+
+        {/* Map Legend Overlay */}
+        <div className="absolute top-2 right-2 z-[400] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-gray-700 shadow-md text-[10px] space-y-1">
+          <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-gray-200">
+            <span className="w-2 h-2 rounded-full bg-blue-500"></span> Submitted GPS
+          </div>
+          <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span> OSM Food Match
+          </div>
+          <div className="flex items-center gap-1.5 font-medium text-slate-500">
+            <span className="w-2 h-0.5 bg-blue-400 border-b border-dashed"></span> 100m Radius
+          </div>
         </div>
       </div>
-    </div>
+    </MapErrorBoundary>
   );
 }

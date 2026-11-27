@@ -9,19 +9,22 @@ export async function GET(req: Request) {
 
     let shops = await getAllShopsAsync();
     if (statusFilter && statusFilter !== "ALL") {
-      shops = shops.filter((s) => s.approval_status === statusFilter);
+      shops = shops.filter(
+        (s) => (s.approval_status || "PENDING").toUpperCase() === statusFilter.toUpperCase()
+      );
     }
 
     const enriched = await Promise.all(
       shops.map(async (s) => {
         const owner = await getUserByIdAsync(s.owner_id);
+        const st = (s.approval_status || "PENDING").toUpperCase();
         return {
           ...s,
           owner_name: s.owner_name || owner?.name || "Merchant",
           owner_email: s.owner_email || owner?.email || "",
           owner_phone: s.owner_phone || s.phone_number || owner?.phone_number || "",
           location_verified: s.location_verified ?? true,
-          approval_status: s.approval_status || "PENDING",
+          approval_status: st,
         };
       })
     );

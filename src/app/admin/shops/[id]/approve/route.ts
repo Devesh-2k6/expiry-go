@@ -15,6 +15,7 @@ export async function POST(
 
     shop.approval_status = "APPROVED";
     shop.is_active = true;
+    shop.location_verified = true;
     shop.approved_at = new Date().toISOString();
     shop.approved_by = "Platform Admin";
     await saveShopAsync(shop);
